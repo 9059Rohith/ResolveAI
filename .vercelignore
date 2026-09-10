@@ -1,0 +1,15 @@
+.git
+.github
+.venv
+.pytest_cache
+.ruff_cache
+data/raw
+data/chroma
+data/runtime
+dist
+docs
+eval
+tests
+Hiver SDE Intern Assignment.docx
+Dockerfile
+docker-compose.yml

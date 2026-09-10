@@ -7,7 +7,7 @@ from collections import defaultdict, deque
 
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -57,6 +57,11 @@ def health():
 @app.get("/readyz")
 def ready():
     return {"status": "ready", "local_mode": True, "llm_mode": bool(os.getenv("OPENAI_API_KEY"))}
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return Response(status_code=204)
 
 
 @app.post("/v1/analyze", dependencies=[Depends(auth)])

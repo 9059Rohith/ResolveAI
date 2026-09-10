@@ -34,7 +34,9 @@ Audited against `Hiver SDE Intern Assignment.docx` and the detailed project brie
 | Tests/security checks | Unit/integration/API tests plus a 16/16 adversarial and negative-escalation launch gate, lint, compile, browser workflow | Complete |
 | Operational audit trail | Text-free JSONL events with request ID, fingerprint, decision evidence, latency, tokens and cost | Complete |
 | Web comparison | Source-backed comparison against public projects, production patterns, research, NIST and OWASP | Complete |
-| Public repository and submission form | No hosting destination/account was provided; no external publication performed | **Not submitted** |
+| Public repository | Target: [github.com/9059Rohith/ResolveAI](https://github.com/9059Rohith/ResolveAI); Vercel Git integration connected | Push pending because the active Git HTTPS identity lacks repository permission |
+| Production deployment | [resolve-ai-wheat.vercel.app](https://resolve-ai-wheat.vercel.app), FastAPI function in Mumbai | Complete and live-tested |
+| Submission form | Requires the applicant's final human evaluation evidence and form submission | **Not submitted** |
 
 ## Honest completion verdict
 

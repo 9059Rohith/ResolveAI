@@ -97,8 +97,7 @@
       "intent": "security_or_privacy",
       "action": "escalate",
       "risk_factors": [
-        "high_risk_intent",
-        "weak_precedent"
+        "high_risk_intent"
       ],
       "retrieval_count": 3
     },

@@ -12,6 +12,10 @@ def test_health_is_public():
     assert client.get("/healthz").json() == {"status": "ok"}
 
 
+def test_browser_favicon_probe_does_not_create_a_console_error():
+    assert client.get("/favicon.ico").status_code == 204
+
+
 def test_analysis_requires_auth_when_configured():
     assert client.post("/v1/analyze", json={"message": "songs pause"}).status_code == 401
 

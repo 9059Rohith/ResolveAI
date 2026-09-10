@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import os
 import threading
 from datetime import UTC, datetime
 from pathlib import Path
@@ -12,8 +13,9 @@ from src.schemas import PipelineResult
 class JsonlAuditLog:
     """Record decision metadata without persisting customer or reply text."""
 
-    def __init__(self, path: str | Path = "data/runtime/audit.jsonl"):
-        self.path = Path(path)
+    def __init__(self, path: str | Path | None = None):
+        default = "/tmp/resolve-audit.jsonl" if os.getenv("VERCEL") else "data/runtime/audit.jsonl"
+        self.path = Path(path or os.getenv("AUDIT_LOG_PATH", default))
         self._lock = threading.Lock()
 
     def write(self, result: PipelineResult) -> None:

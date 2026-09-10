@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "app.py": {
+      "maxDuration": 30,
+      "includeFiles": "{data/processed/retrieval_corpus.jsonl,web/**}",
+      "excludeFiles": "{tests/**,docs/**,eval/**,dist/**,Hiver SDE Intern Assignment.docx}"
+    }
+  },
+  "regions": ["bom1"]
+}

@@ -9,6 +9,8 @@
 
 Resolve is an auditable, single-brand support pipeline for **SpotifyCares**. It classifies an incoming message into eight data-informed intents, retrieves similar resolved-proxy conversations with word-and-character hybrid vectors, drafts from that precedent, and independently decides whether a human must take over. The API and workbench run without an API key in reproducible local mode; `llm` mode uses structured outputs through a swappable client.
 
+**Live production deployment:** [resolve-ai-wheat.vercel.app](https://resolve-ai-wheat.vercel.app)
+
 > Evaluation status is deliberately fail-closed. `eval/golden_set.jsonl` contains 200 component-disjoint annotation candidates after data preparation, but the harness refuses to call them a golden set until a person records every required label. No headline accuracy or judge-agreement number is fabricated in this repository.
 
 ## Fifteen-minute reproduction
@@ -83,6 +85,8 @@ Endpoints:
 - `GET /docs` for OpenAPI
 
 Set `APP_API_TOKEN` to require `Authorization: Bearer …` on analysis. The service caps message length, body size, requests per minute, LLM retries, and upstream timeouts. Every API/CLI decision appends privacy-minimizing metadata to `data/runtime/audit.jsonl`: request ID, message fingerprint, route, reasons, precedent IDs, confidence, latency, token use, and cost; it stores no message or reply text. Build a deployment artifact with `docker compose up --build`; the lean container uses the checked-in redacted corpus in memory, runs as an unprivileged user, and exposes a health check. The optional Chroma index is intended for hosts that install the `vector` extra and mount `data/chroma` themselves.
+
+Vercel deploys through the root `app.py` ASGI entry point and `vercel.json`. Its read-only function filesystem redirects audit events to writable `/tmp`; production-grade durable audit retention should set `AUDIT_LOG_PATH` on a persistent container host or replace the sink with a managed log drain. NumPy and scikit-learn are evaluation-only dependencies, so the hosted API bundle stays lean while `uv sync` still installs the complete evaluator for reviewers.
 
 ## Repository guide
 
