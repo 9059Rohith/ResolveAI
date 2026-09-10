@@ -5,10 +5,10 @@
 - Production alias: <https://resolve-ai-wheat.vercel.app>
 - Platform: Vercel FastAPI/Python function
 - Function region: `bom1` (Mumbai)
-- Function bundle: 17.45 MB
+- Function bundle: approximately 13 MB
 - Source repository: <https://github.com/9059Rohith/ResolveAI>
-- Release commit: `09fa8a3f79f0677110f84e37f8217a1a725f1a60`
-- Vercel deployment: `dpl_A9biWi6QC385ei2Jn3wANYKZGM8n`
+- Application release commit: `09fa8a3f79f0677110f84e37f8217a1a725f1a60`
+- Deployment: immutable Vercel production artifact; inspect the stable alias for its current ID
 
 ## Deployment layout
 
