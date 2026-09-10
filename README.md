@@ -96,6 +96,7 @@ Vercel deploys through the root `app.py` ASGI entry point and `vercel.json`. Its
 - `eval/`: frozen candidates, rubric, metrics, judge and agreement scripts
 - `REPORT.md`: assignment report and current evidence limits
 - `docs/COMPETITIVE_RESEARCH.md`: source-backed comparison and implemented quality gaps
+- `docs/DEPLOYMENT.md`: production topology, verification evidence, operations and rollback
 - `DECISIONS.md`: 15 non-obvious choices
 - `CITATIONS.md`: sources, licensing, pricing and AI-assistance disclosure
 
