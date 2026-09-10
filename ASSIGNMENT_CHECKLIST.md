@@ -18,11 +18,11 @@ Audited against `Hiver SDE Intern Assignment.docx` and the detailed project brie
 | Prompt-injection handling | Untrusted-data fencing, deterministic action gate, regression test | Complete |
 | 150–250 hand-labelled golden examples | 200 candidates exist; no human has completed the labels | **Pending human work** |
 | Automated evaluation metrics | Accuracy, macro-F1, confusion matrix, routing metrics, calibration, risk-coverage, bootstrap intervals, retrieval coverage, latency and cost | Complete; execution gated by labels |
-| LLM judge rubric | Six explicit 1–5 dimensions and independent judge command | Complete; live run needs API key and labels |
+| LLM judge rubric | Six explicit 1–5 dimensions and independent judge command | Complete; `gpt-4.1` structured-output smoke passed; paired run needs labels |
 | Judge–human agreement | Kappa, Pearson correlation, means and ≥30-pair guard | Complete harness; **pending human scores and judge run** |
 | Trivial baseline | Majority/`other`, canned response, always escalate | Complete |
 | Simple baseline | Transparent keyword classification, local retrieval/drafting, threshold router | Complete |
-| Primary system | Structured LLM classifier/drafter plus same deterministic safety gate | Complete; live evidence needs API key |
+| Primary system | Structured LLM classifier/drafter plus same deterministic safety gate | Complete; `gpt-4.1-mini` grounded-draft smoke passed; comparison needs labels |
 | Results comparison | One-set evaluator and report table | **Pending human labels/API evaluation** |
 | Five failure modes | Report includes concrete risk examples and causal hypotheses | Complete as development audit; measured golden failures pending |
 | “Misleading headline number” | Dedicated report section, including why none is claimed yet | Complete |
@@ -31,7 +31,7 @@ Audited against `Hiver SDE Intern Assignment.docx` and the detailed project brie
 | README under-15-minute path | Exact cached commands, timings, corpus size, models and pricing | Complete; timings should be reconfirmed on reviewer network |
 | API and workbench | FastAPI/OpenAPI, same-origin UI, health/readiness, auth option and limits | Complete |
 | Public evidence dashboard | Versioned dataset, leakage, safety and label-status evidence at `/evidence` and `/v1/evidence` | Complete |
-| Automated submission audit | 15 artifact, drift and report-contract checks with an explicit human-evidence gate | Complete |
+| Automated submission audit | 17 artifact, secret-template, drift and report-contract checks with an explicit human-evidence gate | Complete |
 | Deployment package | Pinned `uv.lock`, non-root Dockerfile, Compose health check, CI | Complete |
 | Tests/security checks | Unit/integration/API tests plus a 16/16 adversarial and negative-escalation launch gate, lint, compile, browser workflow | Complete |
 | Operational audit trail | Text-free JSONL events with request ID, fingerprint, decision evidence, latency, tokens and cost | Complete |

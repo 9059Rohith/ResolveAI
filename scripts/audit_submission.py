@@ -38,6 +38,7 @@ def audit_repository() -> dict:
     report = (ROOT / "REPORT.md").read_text(encoding="utf-8")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     decisions = (ROOT / "DECISIONS.md").read_text(encoding="utf-8")
+    env_template = (ROOT / ".env.example").read_text(encoding="utf-8")
 
     human_verified = sum(row.get("label_status") == "human_verified" for row in golden)
     scores_path = ROOT / "eval/human_judge_scores.jsonl"
@@ -66,6 +67,10 @@ def audit_repository() -> dict:
         "report_has_one_week_plan": "one more week" in report.lower(),
         "readme_has_fast_path": "## Fifteen-minute reproduction" in readme,
         "readme_has_live_deployment": "https://resolve-ai-wheat.vercel.app" in readme,
+        "readme_has_poster": "docs/assets/resolve-poster.png" in readme
+        and (ROOT / "docs/assets/resolve-poster.png").exists(),
+        "environment_template_is_sanitized": "OPENAI_API_KEY=your_openai_api_key_here"
+        in env_template,
     }
     pending = []
     if human_verified < 200:

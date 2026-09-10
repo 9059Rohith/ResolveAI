@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 import httpx
 import pytest
@@ -22,6 +23,16 @@ class FakeResponse:
         }
 
 
+def test_client_loads_key_from_env_file(monkeypatch, tmp_path: Path):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    env_file = tmp_path / ".env"
+    env_file.write_text("OPENAI_API_KEY=from-file\n", encoding="utf-8")
+
+    client = OpenAIClient("test", env_file=env_file)
+
+    assert client.key == "from-file"
+
+
 def test_structured_client_retries_malformed_json(monkeypatch):
     responses = iter(
         [
@@ -38,6 +49,29 @@ def test_structured_client_retries_malformed_json(monkeypatch):
     assert client.input_tokens == 20
 
 
+def test_strict_schema_marks_every_property_required(monkeypatch):
+    captured = {}
+
+    def post(*args, **kwargs):
+        captured.update(kwargs["json"])
+        return FakeResponse(
+            json.dumps(
+                {
+                    "intent": "other",
+                    "confidence": 0.5,
+                    "rationale": "unclear",
+                    "risk_factors": [],
+                }
+            )
+        )
+
+    monkeypatch.setattr(httpx, "post", post)
+    OpenAIClient("test", api_key="secret").structured("message", Classification)
+
+    schema = captured["text"]["format"]["schema"]
+    assert set(schema["required"]) == set(schema["properties"])
+
+
 def test_drafter_rejects_invented_citation():
     class Client:
         def structured(self, prompt, schema):
@@ -48,3 +82,28 @@ def test_drafter_rejects_invented_citation():
         LLMDrafter(Client())(
             "x", Classification(intent=Intent.APP, confidence=0.8, rationale="app"), [hit]
         )
+
+
+def test_drafter_removes_historical_signature_and_dead_link_placeholder():
+    class Client:
+        def structured(self, prompt, schema):
+            return Draft(text="Please restart the app. /MG [LINK]", grounded=True, exemplar_ids=["real"])
+
+    hit = RetrievalHit(thread_id="real", customer_message="x", brand_reply="y", similarity=0.8)
+    draft = LLMDrafter(Client())(
+        "x", Classification(intent=Intent.APP, confidence=0.8, rationale="app"), [hit]
+    )
+
+    assert draft.text == "Please restart the app."
+
+
+def test_drafter_prompt_forbids_sensitive_identifier_requests():
+    class Client:
+        def structured(self, prompt, schema):
+            assert "Never request usernames, email addresses, passwords, or payment details" in prompt
+            return Draft(text="Please share your device type.", grounded=True, exemplar_ids=["real"])
+
+    hit = RetrievalHit(thread_id="real", customer_message="x", brand_reply="y", similarity=0.8)
+    LLMDrafter(Client())(
+        "x", Classification(intent=Intent.PLAYBACK, confidence=0.8, rationale="audio"), [hit]
+    )

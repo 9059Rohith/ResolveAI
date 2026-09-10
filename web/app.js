@@ -1,4 +1,11 @@
 const $ = (id) => document.getElementById(id);
+fetch('/readyz').then((response) => response.json()).then((data) => {
+  if (!data.llm_mode) {
+    const option = $('mode').querySelector('option[value="llm"]');
+    option.disabled = true;
+    option.textContent = 'LLM mode · configure OPENAI_API_KEY';
+  }
+}).catch(() => {});
 $('analyze').addEventListener('click', async () => {
   const button = $('analyze'); button.disabled = true; button.firstChild.textContent = 'Analyzing… ';
   $('error').textContent = '';

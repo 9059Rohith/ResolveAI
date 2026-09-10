@@ -3,19 +3,42 @@
 import json
 import os
 import time
+from pathlib import Path
 from typing import TypeVar
 
 import httpx
+from dotenv import load_dotenv
 from pydantic import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
 
 
+def _strict_schema(value):
+    """Convert Pydantic defaults into the strict subset accepted by Responses API."""
+    if isinstance(value, dict):
+        normalized = {key: _strict_schema(item) for key, item in value.items()}
+        if normalized.get("type") == "object" and "properties" in normalized:
+            normalized["required"] = list(normalized["properties"])
+            normalized["additionalProperties"] = False
+        return normalized
+    if isinstance(value, list):
+        return [_strict_schema(item) for item in value]
+    return value
+
+
 class OpenAIClient:
     def __init__(
-        self, model: str, api_key: str | None = None, timeout: float = 30, retries: int = 2
+        self,
+        model: str,
+        api_key: str | None = None,
+        timeout: float = 30,
+        retries: int = 2,
+        env_file: str | Path | None = None,
     ):
         self.model = model
+        if not api_key and not os.getenv("OPENAI_API_KEY"):
+            default_env = Path(__file__).parents[1] / ".env"
+            load_dotenv(env_file or default_env, override=False)
         self.key = api_key or os.getenv("OPENAI_API_KEY")
         if not self.key:
             raise RuntimeError("OPENAI_API_KEY is required for llm mode")
@@ -35,7 +58,7 @@ class OpenAIClient:
                     "type": "json_schema",
                     "name": schema.__name__,
                     "strict": True,
-                    "schema": schema.model_json_schema(),
+                    "schema": _strict_schema(schema.model_json_schema()),
                 }
             },
         }

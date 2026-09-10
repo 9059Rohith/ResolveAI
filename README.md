@@ -4,11 +4,11 @@ An evidence-first AI support system built from 2.8 million real support tweets. 
 
 [**Live workbench**](https://resolve-ai-wheat.vercel.app) · [**Evidence dashboard**](https://resolve-ai-wheat.vercel.app/evidence) · [**OpenAPI**](https://resolve-ai-wheat.vercel.app/docs) · [**Six-page report**](REPORT.md)
 
-[![Resolve evaluation evidence dashboard](docs/assets/evidence-dashboard.png)](https://resolve-ai-wheat.vercel.app/evidence)
+[![Resolve — proof before confidence](docs/assets/resolve-poster.png)](https://resolve-ai-wheat.vercel.app)
 
 | Verified proof | Result | Reproduce |
 |---|---:|---|
-| Repository software audit | **15/15 checks** | `uv run python -m scripts.audit_submission` |
+| Repository software audit | **17/17 checks** | `uv run python -m scripts.audit_submission` |
 | Adversarial launch gate | **16/16 passed** | `uv run python -m eval.run_safety_eval` |
 | Source reconstruction | **28,221 Spotify threads** | `data/processed/thread_stats.json` |
 | Leakage control | **0 evaluation components in retrieval** | `data/processed/sampling_stats.json` |
@@ -17,6 +17,24 @@ An evidence-first AI support system built from 2.8 million real support tweets. 
 The API and workbench run without an API key in reproducible local mode. `llm` mode uses schema-validated structured outputs through a swappable client. The final route comes from a deterministic safety gate, so model text cannot approve itself for automatic handling.
 
 > **Evidence boundary:** `eval/golden_set.jsonl` contains 200 frozen, component-disjoint annotation candidates. They are not represented as a hand-labelled golden set. Headline accuracy, reply-quality, and judge-agreement results stay withheld until the applicant personally completes the required labels and ratings.
+
+## What the system does
+
+| Stage | Input | Output | Trust control |
+|---|---|---|---|
+| Classify | Untrusted customer message | One of eight intents, confidence, rationale, risk factors | Pydantic schema; injection text cannot change instructions |
+| Retrieve | Message plus predicted intent | Three similar historical SpotifyCares threads | Evaluation components are excluded; every hit retains a thread ID |
+| Draft | Message, intent and retrieved replies | Concise support reply plus cited exemplar IDs | Unsupported citations are rejected; agent initials and dead link placeholders are removed |
+| Route | Classification, retrieval and draft | `auto_handle` or `escalate`, with reasons | Deterministic policy runs after generation and cannot be overridden by model text |
+| Audit | Final pipeline result | Text-free JSONL event | Stores fingerprints and decision metadata, never customer or reply text |
+
+The eight-intent taxonomy is `playback_or_audio`, `app_or_device_issue`, `content_availability`, `plan_or_feature_question`, `billing_or_subscription`, `account_access`, `security_or_privacy`, and `other`. Billing, account access, security/privacy, and unknown requests always escalate. Lower-risk requests are automated only when intent confidence is at least 0.67, precedent similarity is at least 0.24, and the draft is grounded.
+
+## Evidence at a glance
+
+[![Resolve evaluation evidence dashboard](docs/assets/evidence-dashboard.png)](https://resolve-ai-wheat.vercel.app/evidence)
+
+The source pipeline inspected **2,811,774 tweets**, expanded **91,889 tweets** around SpotifyCares, reconstructed **28,221 clean conversation components**, identified **25,599 resolved proxies**, and sampled a **5,000-thread retrieval corpus**. The 200 evaluation candidates are balanced at 25 machine-suggested examples per intent and component-disjoint from retrieval. The synthetic injection case is disclosed in the labeling notes.
 
 ## Fifteen-minute reproduction
 
@@ -30,7 +48,7 @@ uv run python -m scripts.build_taxonomy            # <1 min
 uv run python -m scripts.prepare_data              # <1 min; 5,000 corpus + 200 candidates
 uv run pytest -q                                   # <1 min
 uv run python -m eval.run_safety_eval              # 16-case launch gate
-uv run python -m scripts.audit_submission          # 14-point artifact audit
+uv run python -m scripts.audit_submission          # 17-point artifact audit
 uv run uvicorn api.main:app --host 127.0.0.1 --port 8000
 ```
 
@@ -44,6 +62,18 @@ uv run python -m scripts.run_pipeline --mode llm "I was charged twice"
 ```
 
 Local mode costs $0 and is the simple baseline: keyword intent, local hashing-vector retrieval, and precedent-shaped drafting. LLM mode uses `gpt-4.1-mini` for classification and drafting. At prices checked 2026-09-10 ($0.40/M input, $1.60/M output), each response records actual tokens and estimated cost. `gpt-4.1` is the independently prompted judge. Put `OPENAI_API_KEY` in a local `.env`; keys are never committed.
+
+### Optional OpenAI mode
+
+Keep credentials in `.env`, never in `.env.example`:
+
+```powershell
+Copy-Item .env.example .env
+# Edit .env and replace the placeholder with your key.
+uv run python -m scripts.run_pipeline --mode llm "My songs keep pausing"
+```
+
+The client loads `.env` automatically, calls the Responses API with a strict JSON schema, validates the output, retries bounded transient failures, records token usage, and removes copied historical agent signatures. The live public deployment intentionally uses local mode by default, so trying the application does not consume API credits.
 
 The under-15-minute path uses the same hashing vectors in memory to avoid Chroma's large installation tree. To build the optional persistent Chroma index, run `uv sync --extra vector` and then `uv run python -m scripts.build_vector_store`. The application automatically uses it when present and otherwise uses the component-disjoint JSONL corpus.
 

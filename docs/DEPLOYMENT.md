@@ -39,7 +39,9 @@ The release was tested after alias promotion:
 - Mobile viewport: no console errors or horizontal overflow
 - Vercel status: READY; no error-level production logs returned
 
-Repository verification for this release: 31 tests passed and one optional-Chroma test skipped in the lean environment; Ruff passed; the 16-case safety gate passed 16/16; the submission artifact audit passed 15/15.
+Repository verification for this release: 35 tests passed and one optional-Chroma test skipped in the lean environment; Ruff passed; the 16-case safety gate passed 16/16; the submission artifact audit passed 17/17; the tracked credential scan found no API key.
+
+The optional OpenAI path was also smoke-tested end to end from the browser: `.env` loading, `gpt-4.1-mini` strict classification and drafting, cited retrieval, signature/link cleanup, deterministic routing, FastAPI serialization, and UI rendering all passed. A separate `gpt-4.1` judge smoke test returned all six rubric dimensions in range. These smoke tests establish integration health; they are not substitutes for golden-set quality metrics or judge-human agreement.
 
 ## Deploy and roll back
 
