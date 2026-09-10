@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Resolve — Spotify support agent</title>
+  <link rel="stylesheet" href="/assets/styles.css">
+  <style>.results.hidden{display:none!important}</style>
+</head>
+<body>
+  <header><a class="mark" href="/">R<span>◦</span></a><div><strong>Resolve</strong><small>Spotify support intelligence</small></div><span class="status"><i></i> Local mode ready</span></header>
+  <main>
+    <section class="intro">
+      <p class="overline">Decision workbench</p>
+      <h1>Every reply should earn<br>the right to be sent.</h1>
+      <p>Classify an incoming message, inspect the historical evidence, and see why the agent handles or escalates it.</p>
+    </section>
+    <section class="composer">
+      <label for="message">Incoming customer message</label>
+      <textarea id="message" rows="4">My Spotify songs keep pausing every few seconds on my phone.</textarea>
+      <div class="actions"><select id="mode"><option value="local">Local reproducible mode</option><option value="llm">LLM mode</option></select><button id="analyze">Analyze message <span>→</span></button></div>
+      <p id="error" role="alert"></p>
+    </section>
+    <section id="results" class="results hidden" aria-live="polite">
+      <article class="decision"><div class="section-head"><span>01</span><h2>Decision</h2></div><div class="decision-grid"><div><small>Intent</small><strong id="intent"></strong><div class="meter"><i id="confidence-bar"></i></div><p id="confidence"></p></div><div><small>Route</small><strong id="route"></strong><p id="reason"></p></div></div></article>
+      <article><div class="section-head"><span>02</span><h2>Draft reply</h2></div><blockquote id="draft"></blockquote><div id="grounding" class="tag"></div></article>
+      <article><div class="section-head"><span>03</span><h2>Historical precedent</h2></div><div id="evidence"></div></article>
+      <footer><span id="latency"></span><span>Customer text is redacted before indexing</span><a href="/docs">API docs ↗</a></footer>
+    </section>
+  </main>
+  <script src="/assets/app.js"></script>
+</body></html>

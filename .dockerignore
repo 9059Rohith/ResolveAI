@@ -1,0 +1,11 @@
+.git
+.venv
+.env
+data/raw
+data/chroma
+data/runtime
+__pycache__
+.pytest_cache
+artifacts
+data/processed/all_threads.jsonl
+data/processed/taxonomy_console.txt

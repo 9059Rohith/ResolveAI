@@ -1,0 +1,13 @@
+services:
+  support-agent:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      APP_API_TOKEN: ${APP_API_TOKEN:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

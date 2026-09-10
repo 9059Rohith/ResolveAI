@@ -1,0 +1,6 @@
+{
+  "url": "https://www.kaggle.com/api/v1/datasets/download/thoughtvector/customer-support-on-twitter",
+  "archive_sha256": "7ffe106c4158c22f79b2a220297e4090dd68fa034c6e58710578ad8cfeea558a",
+  "license": "CC-BY-NC-SA-4.0",
+  "dataset": "thoughtvector/customer-support-on-twitter"
+}

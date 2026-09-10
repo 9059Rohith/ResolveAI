@@ -1,0 +1,16 @@
+.venv/
+.env
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+data/raw/
+data/chroma/
+data/runtime/
+*.egg-info/
+dist/
+build/
+artifacts/
+data/processed/all_threads.jsonl
+data/processed/taxonomy_console.txt
+node_modules/

@@ -1,0 +1,17 @@
+{
+  "source": "full SQLite staging table grouped by author_id",
+  "top_support_author_counts": {
+    "AmazonHelp": 169840,
+    "AppleSupport": 106860,
+    "Uber_Support": 56270,
+    "SpotifyCares": 43265,
+    "Delta": 42253,
+    "Tesco": 38573,
+    "AmericanAir": 36764,
+    "TMobileHelp": 34317,
+    "comcastcares": 33031,
+    "British_Airways": 29361
+  },
+  "selected": "SpotifyCares",
+  "reason": "Fourth-highest support account volume provides adequate data and diverse playback, device, account, content, plan, billing, and security issues while avoiding the two most common demo brands."
+}

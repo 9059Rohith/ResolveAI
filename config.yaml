@@ -1,0 +1,20 @@
+brand: SpotifyCares
+seed: 20260910
+retrieval:
+  top_k: 3
+  min_similarity: 0.24
+routing:
+  min_intent_confidence: 0.67
+  always_escalate: [billing_or_subscription, account_access, security_or_privacy, other]
+llm:
+  provider: openai
+  agent_model: gpt-4.1-mini
+  judge_model: gpt-4.1
+  timeout_seconds: 30
+  max_retries: 2
+  max_input_characters: 2000
+  input_price_per_million: 0.40
+  output_price_per_million: 1.60
+api:
+  max_body_bytes: 8192
+  requests_per_minute: 60

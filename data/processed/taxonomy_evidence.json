@@ -1,0 +1,186 @@
+[
+  {
+    "cluster": 0,
+    "size": 198,
+    "top_terms": [
+      "link",
+      "link link",
+      "spotify",
+      "thank",
+      "spotify link",
+      "artist",
+      "help link",
+      "song",
+      "like",
+      "doing"
+    ],
+    "sample_messages": [
+      "Hey : Make this a thing. Please: [LINK]",
+      "Introducing: The Spotify for Artists iOS App! Download it now: [LINK] [LINK]",
+      "I'll be missing this :( [LINK]",
+      "what the fuck is this??? Explain [LINK]",
+      "my username is thebaldone but I’m getting this.. what’s up that? [LINK]"
+    ]
+  },
+  {
+    "cluster": 1,
+    "size": 433,
+    "top_terms": [
+      "account",
+      "premium",
+      "student",
+      "charged",
+      "spotify",
+      "premium account",
+      "email",
+      "spotify premium",
+      "student discount",
+      "hi"
+    ],
+    "sample_messages": [
+      "hey , Im from the UK but im going to be in the US for the next 3 months, will my premium account still work out there?",
+      "how would I go about recovering a stolen premium account?",
+      "I have a free account. I want to upgrade via the 3 month offer. But it’s not possible to do this via Spotify on my iPhone. Grrr!",
+      "I have two issues, one I can’t link my regular account with my artist account made through distrokid (cause I can’t find it) &amp; two, my music that has been uploaded through distrokid is on multiple wrong accounts that aren’t mine.",
+      "hi mijn account is laatst uitgeschakeld dit komt door een per ongeluk vordering van de betaling. email: __email__"
+    ]
+  },
+  {
+    "cluster": 2,
+    "size": 1279,
+    "top_terms": [
+      "spotify",
+      "album",
+      "song",
+      "link",
+      "hey",
+      "playlist",
+      "new",
+      "just",
+      "like",
+      "hi"
+    ],
+    "sample_messages": [
+      "Hi, Spotify client on Windows 7 still report that there is no connection (error 4) but my connection is working for other apps",
+      "Hey any chance to use echo audio groups like it is possible to use Chromecast audio groups? Help Appreciated!",
+      "/ is telling me that a different website was compromised but they KNOW I use the same password on both services - so they reset my password for spotify... WTF",
+      "you guys sent me an email to change my password today, and as I attempt to I get this error The CSRF token is invalid. Please try to resubmit the form.",
+      "hi there! is it possible to remove a project from spotify, but reupload a single song from the project &amp; keep the plays/streams if using same ISRC, audio file, track name, artist name?"
+    ]
+  },
+  {
+    "cluster": 3,
+    "size": 229,
+    "top_terms": [
+      "music",
+      "apple",
+      "spotify",
+      "play",
+      "apple music",
+      "play music",
+      "app",
+      "playing",
+      "link",
+      "listen"
+    ],
+    "sample_messages": [
+      "Hi how can I keep Christmas music off my discover weekly/release radar or block it completely",
+      "Dear , can you please take your money and let me listen to my music please 😭😭😭",
+      "【#恋するユニバース】 iTunes以外の各配信サイトはこちらから！ iTunes、レコチョク、mora、Spotify、Apple Music、LINE music [LINK] [LINK]",
+      "I'm saving downloaded music to SD card on Android. Bug: If I remove it shortly, even without running Spotify, I lose all downloads.",
+      "i hope rainz music gets added to spotify"
+    ]
+  },
+  {
+    "cluster": 4,
+    "size": 217,
+    "top_terms": [
+      "help",
+      "need help",
+      "need",
+      "account",
+      "premium",
+      "email",
+      "spotify",
+      "hi",
+      "payment",
+      "trying"
+    ],
+    "sample_messages": [
+      "hi spotify having complications recovering my password i've tried everything could you help please?",
+      "Hey I’m in need of some help. I paid for a year of premium on last week and now my account is showing as free!",
+      "I am trying to start my Vodafone Spotify connection but it appears to say running into problems. I can share my ID and phone number in a DM. Please help!",
+      "help please.",
+      "hi! Did you receive my DM? I couldn't log-in to my spotify account. Please help! Thank you"
+    ]
+  },
+  {
+    "cluster": 5,
+    "size": 265,
+    "top_terms": [
+      "songs",
+      "playlists",
+      "play",
+      "playlist",
+      "shuffle",
+      "like",
+      "song",
+      "artist",
+      "want",
+      "playing"
+    ],
+    "sample_messages": [
+      "I’m tired of songs disappearing from without warning. At least Netflix alerts you before something is removed.",
+      "is there an issue with linking to Sonos? It won't play via Sonos or let me reauthorise!!!",
+      "Hopefully you will support blocking/hiding songs/playlists from a specific user/artist/album/genre/country.",
+      "Help. Only some of my \"Songs\" are available offline on my Mac whereas all of them are available offline on my phone. [LINK]",
+      "Hey - is there any way to hide certain playlists that I’ll never listen to from showing up?"
+    ]
+  },
+  {
+    "cluster": 6,
+    "size": 226,
+    "top_terms": [
+      "app",
+      "spotify",
+      "android",
+      "spotify app",
+      "iphone",
+      "desktop",
+      "fix",
+      "desktop app",
+      "link",
+      "android app"
+    ],
+    "sample_messages": [
+      "Dear , please personalise the Xbox One app home screen as I don't want to see RnB and Sam Smith before I get to my Megadeth. 🙋",
+      "I've been trying to fix my computer app and Spotify web player for 4 months with no help from customer service, is it about time I give up and switch to ?",
+      "I want a nice useable app for my or In cancelling both of my subscriptions.",
+      "My playlists don't sync between the Desktop app (on Mac), my phone (Android), and the web player. They're all different. Please help.",
+      "My app keeps crashing and it’s making me sad. Staaaahp!"
+    ]
+  },
+  {
+    "cluster": 7,
+    "size": 153,
+    "top_terms": [
+      "family",
+      "dm",
+      "plan",
+      "family plan",
+      "premium family",
+      "invite",
+      "premium",
+      "family account",
+      "check",
+      "sent"
+    ],
+    "sample_messages": [
+      "Seriously, I can't change the address on my family plan. What a joke!",
+      "Hello , I just sent you a DM, can you give it a check, please?",
+      "i sent another dm. dont know what's going on.. cant seem to add a family😖😖😖",
+      "I sent you guys a dm. I seriously need cflarification in here",
+      "The Family Plan is a big rip off. I told you the day I signed up for it to cancel the family plan. Your foreign tech support was of no value. What I gathered from dialogue and their script only one of us can be on Spotify at a time. What a joke!!"
+    ]
+  }
+]

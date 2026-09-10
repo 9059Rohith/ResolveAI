@@ -1,0 +1,18 @@
+{
+  "seed": 20260910,
+  "brand": "SpotifyCares",
+  "total_threads": 28221,
+  "retrieval_threads": 5000,
+  "candidate_threads": 200,
+  "component_disjoint": true,
+  "intent_suggestions": {
+    "account_access": 25,
+    "app_or_device_issue": 25,
+    "billing_or_subscription": 25,
+    "content_availability": 25,
+    "other": 25,
+    "plan_or_feature_question": 25,
+    "playback_or_audio": 25,
+    "security_or_privacy": 25
+  }
+}

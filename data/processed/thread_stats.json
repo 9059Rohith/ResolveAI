@@ -1,0 +1,13 @@
+{
+  "missing_parent_edges": 69,
+  "cyclic_components": 0,
+  "cross_brand_components": 56,
+  "no_customer_components": 3,
+  "multi_reply_threads": 8231,
+  "input_tweets": 91889,
+  "threads": 28221,
+  "resolved_proxy_threads": 25599,
+  "accepted_tweets": 91187,
+  "excluded_tweets": 702,
+  "raw_tweets": 2811774
+}
