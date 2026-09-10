@@ -1,5 +1,8 @@
 import pytest
 
+from eval.run_eval import load_cached_predictions
+from eval.summarize_predictions import summarize
+from src.data import write_jsonl
 from src.evaluation import (
     bootstrap_proportion_interval,
     calibration_metrics,
@@ -45,3 +48,45 @@ def test_bootstrap_interval_is_seeded_and_contains_observed_rate():
     assert interval["estimate"] == 0.75
     assert interval["lower_95"] <= 0.75 <= interval["upper_95"]
     assert interval == bootstrap_proportion_interval([True, True, False, True], seed=7)
+
+
+def test_cached_predictions_are_reordered_and_require_exact_ids(tmp_path):
+    path = tmp_path / "predictions.jsonl"
+    rows = [{"example_id": "a"}, {"example_id": "b"}]
+    write_jsonl(path, [{"example_id": "b", "intent": "other"}, {"example_id": "a", "intent": "other"}])
+
+    cached = load_cached_predictions(path, rows)
+
+    assert [row["example_id"] for row in cached] == ["a", "b"]
+    write_jsonl(path, [{"example_id": "a", "intent": "other"}])
+    assert load_cached_predictions(path, rows) is None
+
+
+def test_prediction_summary_reports_operational_metrics_without_labels():
+    rows = [
+        {
+            "intent": "playback_or_audio",
+            "should_escalate": False,
+            "latency_ms": 10,
+            "top_similarity": 0.5,
+            "intent_confidence": 0.9,
+            "exemplar_ids": ["one"],
+            "estimated_cost_usd": 0.01,
+        },
+        {
+            "intent": "other",
+            "should_escalate": True,
+            "latency_ms": 20,
+            "top_similarity": 0.1,
+            "intent_confidence": 0.4,
+            "exemplar_ids": [],
+            "estimated_cost_usd": 0.02,
+        },
+    ]
+
+    result = summarize(rows)
+
+    assert result["examples"] == 2
+    assert result["auto_handle_rate"] == 0.5
+    assert result["grounded_rate"] == 0.5
+    assert result["total_estimated_cost_usd"] == 0.03

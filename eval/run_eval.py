@@ -1,5 +1,6 @@
 """Run all systems on one frozen human-labelled set; never overwrites labels."""
 
+import argparse
 import json
 import time
 from pathlib import Path
@@ -43,7 +44,26 @@ def pipeline_prediction(pipeline, row, retrieval_only=False):
     }
 
 
+def load_cached_predictions(path: str | Path, rows: list[dict]) -> list[dict] | None:
+    path = Path(path)
+    if not path.exists():
+        return None
+    predictions = read_jsonl(path)
+    by_id = {row.get("example_id"): row for row in predictions}
+    expected = [row["example_id"] for row in rows]
+    if len(by_id) != len(predictions) or set(by_id) != set(expected):
+        return None
+    return [by_id[example_id] for example_id in expected]
+
+
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--reuse-predictions",
+        action="store_true",
+        help="Reuse complete prediction files created by eval.generate_predictions",
+    )
+    args = parser.parse_args()
     rows = read_jsonl("eval/golden_set.jsonl")
     try:
         require_complete_labels(rows)
@@ -62,14 +82,19 @@ def main() -> None:
     report = {}
     Path("eval/results").mkdir(parents=True, exist_ok=True)
     for name, fn in systems.items():
-        predictions = []
-        for row in rows:
-            started = time.perf_counter()
-            prediction = fn(row)
-            prediction.setdefault("latency_ms", (time.perf_counter() - started) * 1000)
-            prediction["example_id"] = row["example_id"]
-            predictions.append(prediction)
-        write_jsonl(f"eval/results/{name}_predictions.jsonl", predictions)
+        path = f"eval/results/{name}_predictions.jsonl"
+        predictions = load_cached_predictions(path, rows) if args.reuse_predictions else None
+        if predictions is None:
+            predictions = []
+            for row in rows:
+                started = time.perf_counter()
+                prediction = fn(row)
+                prediction.setdefault("latency_ms", (time.perf_counter() - started) * 1000)
+                prediction["example_id"] = row["example_id"]
+                predictions.append(prediction)
+            write_jsonl(path, predictions)
+        else:
+            print(f"Reusing {len(predictions)} cached predictions for {name}")
         report[name] = {
             **classification_metrics(
                 [r["intent"] for r in rows], [p["intent"] for p in predictions]

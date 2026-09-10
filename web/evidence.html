@@ -44,6 +44,23 @@
       </article>
     </section>
 
+    <section class="proof-grid proof-grid-secondary" aria-label="Frozen model artifacts">
+      <article class="proof-card verified">
+        <div class="proof-label"><span>Verified</span><small>label-independent execution</small></div>
+        <strong class="score"><span id="primary-predictions">200</span>/200</strong>
+        <h2>Frozen primary predictions</h2>
+        <p>Every candidate has a saved `gpt-4.1-mini` classification, draft, route, cited evidence, latency, tokens, and cost. No label field was read.</p>
+        <code>uv run python -m eval.generate_predictions --system primary_llm</code>
+      </article>
+      <article class="proof-card provisional">
+        <div class="proof-label"><span>Provisional</span><small>awaiting human agreement</small></div>
+        <strong class="score"><span id="judge-scores">200</span>/200</strong>
+        <h2>Independent judge scores</h2>
+        <p>`gpt-4.1` scored six reply dimensions using historical responses as a disclosed proxy. These become quality evidence only after blind human agreement.</p>
+        <code>uv run python -m scripts.rate_judge</code>
+      </article>
+    </section>
+
     <section class="evidence-section">
       <div class="section-title"><p class="overline">01 / data lineage</p><h2>Raw conversation to cited precedent</h2></div>
       <div class="lineage">
@@ -73,7 +90,7 @@
         <article><span>Simple</span><h3>Keywords + local retrieval</h3><p>A transparent, deterministic baseline with no API cost.</p></article>
         <article><span>Primary</span><h3>Structured LLM + same safety gate</h3><p>Compared on identical examples, metrics, and routing policy.</p></article>
       </div>
-      <p class="evidence-note"><strong>Evidence boundary:</strong> headline accuracy, reply-quality, and judge-agreement results are intentionally withheld until 200 human labels, a live primary run, and at least 30 paired ratings exist.</p>
+      <p class="evidence-note"><strong>Evidence boundary:</strong> headline accuracy, reply-quality, and judge-agreement results are intentionally withheld until 200 human labels and at least 30 paired ratings exist. Primary predictions and provisional judge scores are already frozen for every candidate.</p>
     </section>
 
     <section class="cta-panel">

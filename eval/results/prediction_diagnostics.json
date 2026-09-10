@@ -1,0 +1,52 @@
+{
+  "status": "label_free_diagnostics_not_quality_evaluation",
+  "systems": {
+    "simple": {
+      "examples": 200,
+      "intent_distribution": {
+        "account_access": 20,
+        "app_or_device_issue": 24,
+        "billing_or_subscription": 23,
+        "content_availability": 25,
+        "other": 26,
+        "plan_or_feature_question": 29,
+        "playback_or_audio": 25,
+        "security_or_privacy": 28
+      },
+      "auto_handle_rate": 0.515,
+      "grounded_rate": 0.98,
+      "retrieval_coverage_at_0_24": 0.98,
+      "mean_top_similarity": 0.44285876950597414,
+      "mean_intent_confidence": 0.6811,
+      "p50_ms": 45.18,
+      "p95_ms": 271.6669999999998,
+      "total_estimated_cost_usd": 0.0
+    },
+    "primary_llm": {
+      "examples": 200,
+      "intent_distribution": {
+        "account_access": 40,
+        "app_or_device_issue": 20,
+        "billing_or_subscription": 28,
+        "content_availability": 30,
+        "other": 15,
+        "plan_or_feature_question": 11,
+        "playback_or_audio": 21,
+        "security_or_privacy": 35
+      },
+      "auto_handle_rate": 0.3,
+      "grounded_rate": 0.905,
+      "retrieval_coverage_at_0_24": 0.96,
+      "mean_top_similarity": 0.42190126036786046,
+      "mean_intent_confidence": 0.91715,
+      "p50_ms": 4638.615,
+      "p95_ms": 6780.234499999998,
+      "total_estimated_cost_usd": 0.089465
+    }
+  },
+  "cross_system": {
+    "shared_examples": 200,
+    "intent_agreement": 0.57,
+    "route_agreement": 0.725
+  }
+}

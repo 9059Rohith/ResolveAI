@@ -14,5 +14,5 @@ def test_submission_audit_distinguishes_software_from_human_evidence():
     assert set(audit["pending_human_evidence"]) == {
         "200 hand-labelled examples",
         "at least 30 paired human/judge ratings",
-        "live primary-system evaluation",
+        "human-labelled comparative metrics",
     }

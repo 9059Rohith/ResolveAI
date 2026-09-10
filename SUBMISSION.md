@@ -25,8 +25,8 @@ Resolve is an auditable SpotifyCares support agent built from the Customer Suppo
 Before submitting the form, the applicant must complete these evidence-producing steps:
 
 1. Run `uv run python -m scripts.label_golden` and personally adjudicate all 200 candidates.
-2. Run the trivial, simple, and primary evaluations with `uv run python -m eval.run_eval`.
-3. Run `uv run python -m eval.run_judge --system primary_llm`, personally score at least 30 matching replies, and run `uv run python -m eval.judge_human_agreement`.
+2. Run the trivial, simple, and primary metrics with `uv run python -m eval.run_eval --reuse-predictions`; all 200 simple and primary predictions are already saved.
+3. Run `uv run python -m eval.run_judge --system primary_llm --workers 6` to replace provisional historical references with human directions, complete 32 blind ratings with `uv run python -m scripts.rate_judge`, and run `uv run python -m eval.judge_human_agreement`.
 4. Copy the resulting metrics and measured golden-set failures into [REPORT.md](REPORT.md), then submit the repository and report through the [Hiver Notion form](https://intelligent-bar-256.notion.site/39492cbf0da2800682cfc78a600a745f).
 
 These steps are intentionally not automated or pre-filled: the assignment explicitly asks for a hand-labelled set and evidence of agreement with a human.

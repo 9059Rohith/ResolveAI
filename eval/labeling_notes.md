@@ -20,4 +20,4 @@ The repository generator creates 200 candidates, not human labels. A real human 
 - Disagreements/second rater: none recorded
 - Known ambiguity notes: pending annotation
 
-For judge agreement, the same human must score at least 30 frozen primary replies using `eval/judge_rubric.md`, storing rows in `eval/human_judge_scores.jsonl`. Run the independent LLM judge and `eval/judge_human_agreement.py`; the latter refuses fewer than 30 paired records.
+For judge agreement, run `uv run python -m scripts.rate_judge`. It selects four cases per machine-suggested intent (32 total), prioritises edge-case strata, displays the customer message, reference, frozen primary draft and evidence, and never displays the LLM judge score. It saves after every rating and can be resumed. The independent judge has already scored all 200 frozen replies using the historical response as a disclosed provisional reference. After the human labels add ideal directions, rerunning `eval.run_judge` refreshes any score whose reference basis changed. `eval.judge_human_agreement` refuses fewer than 30 paired records.

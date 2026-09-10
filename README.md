@@ -8,8 +8,10 @@ An evidence-first AI support system built from 2.8 million real support tweets. 
 
 | Verified proof | Result | Reproduce |
 |---|---:|---|
-| Repository software audit | **17/17 checks** | `uv run python -m scripts.audit_submission` |
+| Repository software audit | **19/19 checks** | `uv run python -m scripts.audit_submission` |
 | Adversarial launch gate | **16/16 passed** | `uv run python -m eval.run_safety_eval` |
+| Primary LLM execution | **200/200 predictions** | `uv run python -m eval.generate_predictions --system primary_llm` |
+| Independent LLM judge | **200/200 provisional scores** | `uv run python -m eval.run_judge --system primary_llm` |
 | Source reconstruction | **28,221 Spotify threads** | `data/processed/thread_stats.json` |
 | Leakage control | **0 evaluation components in retrieval** | `data/processed/sampling_stats.json` |
 | Production service | **Live in Vercel bom1** | `GET /healthz` |
@@ -48,7 +50,7 @@ uv run python -m scripts.build_taxonomy            # <1 min
 uv run python -m scripts.prepare_data              # <1 min; 5,000 corpus + 200 candidates
 uv run pytest -q                                   # <1 min
 uv run python -m eval.run_safety_eval              # 16-case launch gate
-uv run python -m scripts.audit_submission          # 17-point artifact audit
+uv run python -m scripts.audit_submission          # 19-point artifact audit
 uv run uvicorn api.main:app --host 127.0.0.1 --port 8000
 ```
 
@@ -75,6 +77,8 @@ uv run python -m scripts.run_pipeline --mode llm "My songs keep pausing"
 
 The client loads `.env` automatically, calls the Responses API with a strict JSON schema, validates the output, retries bounded transient failures, records token usage, and removes copied historical agent signatures. The live public deployment intentionally uses local mode by default, so trying the application does not consume API credits.
 
+The checked-in 200-case primary prediction run used 129,117 input tokens and 23,640 output tokens for an estimated total of **$0.089465**. It completed before labels were read, preserving evaluation independence. Regenerate it with `uv run python -m eval.generate_predictions --system primary_llm --workers 6`; the runner is parallel, resumable, and writes progress every ten cases.
+
 The under-15-minute path uses the same hashing vectors in memory to avoid Chroma's large installation tree. To build the optional persistent Chroma index, run `uv sync --extra vector` and then `uv run python -m scripts.build_vector_store`. The application automatically uses it when present and otherwise uses the component-disjoint JSONL corpus.
 
 ## Complete evaluation workflow
@@ -83,13 +87,13 @@ The official dataset requires human work by definition:
 
 ```powershell
 uv run python -m scripts.label_golden             # resume-safe terminal annotation
-uv run python -m eval.run_eval                     # same 200 labels, all three systems
-uv run python -m eval.run_judge --system primary_llm
-# Human scores at least 30 matching rows into eval/human_judge_scores.jsonl
+uv run python -m eval.run_eval --reuse-predictions # same 200 labels; reuses frozen outputs
+uv run python -m eval.run_judge --system primary_llm --workers 6
+uv run python -m scripts.rate_judge                # 32 blind, intent-balanced ratings
 uv run python -m eval.judge_human_agreement
 ```
 
-`run_eval.py` writes predictions beside labels, never over them. It reports intent accuracy/macro-F1/confusion matrix; escalation precision/recall/F1 and missed escalations; auto-handle coverage and unsafe auto-handle rate; classifier Brier score/ECE and a risk-coverage curve; seeded bootstrap 95% intervals; p50/p95 latency; and measured mean request cost. `run_judge.py` scores groundedness, tone, safety, actionability, conciseness, and evidence relevance. Agreement reports quadratic weighted kappa, Pearson correlation, score means per dimension, and rejects fewer than 30 pairs.
+`run_eval.py` writes predictions beside labels, never over them. It reports intent accuracy/macro-F1/confusion matrix; escalation precision/recall/F1 and missed escalations; auto-handle coverage and unsafe auto-handle rate; classifier Brier score/ECE and a risk-coverage curve; seeded bootstrap 95% intervals; p50/p95 latency; and measured mean request cost. `run_judge.py` scores groundedness, tone, safety, actionability, conciseness, and evidence relevance. Its checked-in 200 scores use historical replies as a disclosed provisional reference and automatically rerun after human reference directions exist. `rate_judge.py` collects 32 blind, balanced human ratings without displaying model scores. Agreement reports quadratic weighted kappa, Pearson correlation, score means per dimension, and rejects fewer than 30 pairs.
 
 `eval/safety_cases.jsonl` is a separate pre-deployment gate covering prompt injection, financial/account/privacy risk, ambiguity, out-of-domain requests, and negative cases that should be auto-handled. It currently passes 16/16 in local mode. This verifies deterministic contracts, not open-ended LLM reply quality.
 

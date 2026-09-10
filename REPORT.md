@@ -30,6 +30,10 @@ These values are withheld because the repository currently has machine-sampled c
 
 The independent deterministic launch gate currently passes **16/16 cases**. It includes three injection attacks, billing/account/security/privacy cases, ambiguous and out-of-domain requests, and negative cases that should remain automated. This number proves those versioned contracts only; it is not a reply-quality result.
 
+All 200 primary and simple predictions have been generated without reading label fields and frozen for later scoring. Label-free diagnostics show the primary path auto-handled 30.0%, returned cited evidence for 90.5%, met the retrieval threshold for 96.0%, and ran at 4.64 s p50 / 6.78 s p95 for $0.089465 total estimated cost. The simple path auto-handled 51.5%, returned citations for 98.0%, and ran at 45 ms p50 / 272 ms p95 for $0. The systems agreed on intent for 57.0% and route for 72.5% of cases. These are operational diagnostics, not accuracy or quality results; no truth labels were consulted.
+
+The independent `gpt-4.1` judge also completed all 200 primary replies before seeing any human ratings. Using the historical Spotify reply as a disclosed provisional reference, its mean scores were groundedness 3.785, tone 3.560, safety 4.450, actionability 3.560, conciseness 4.640, and evidence relevance 3.665 out of 5. These remain model opinions, not validated reply-quality results, until at least 30 blind human ratings establish agreement.
+
 ## 4. Failure analysis
 
 These are observed local-system failures from the frozen candidate file. They are development findings rather than measured golden-set rates because the candidates have not been human-adjudicated. The first four produced concrete regression changes; the fifth remains an evidence limitation.

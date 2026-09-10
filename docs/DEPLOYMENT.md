@@ -39,9 +39,11 @@ The release was tested after alias promotion:
 - Mobile viewport: no console errors or horizontal overflow
 - Vercel status: READY; no error-level production logs returned
 
-Repository verification for this release: 35 tests passed and one optional-Chroma test skipped in the lean environment; Ruff passed; the 16-case safety gate passed 16/16; the submission artifact audit passed 17/17; the tracked credential scan found no API key.
+Repository verification for this release: 40 tests passed and one optional-Chroma test skipped in the lean environment; Ruff passed; the 16-case safety gate passed 16/16; the submission artifact audit passed 19/19; the tracked credential scan found no API key.
 
 The optional OpenAI path was also smoke-tested end to end from the browser: `.env` loading, `gpt-4.1-mini` strict classification and drafting, cited retrieval, signature/link cleanup, deterministic routing, FastAPI serialization, and UI rendering all passed. A separate `gpt-4.1` judge smoke test returned all six rubric dimensions in range. These smoke tests establish integration health; they are not substitutes for golden-set quality metrics or judge-human agreement.
+
+The frozen evaluation artifacts now include all 200 simple predictions, all 200 primary `gpt-4.1-mini` predictions, label-free operational diagnostics, and 200 independent `gpt-4.1` judge scores. Generation is parallel, resumable, and independent of label fields. Human labels and paired human ratings remain intentionally absent.
 
 ## Deploy and roll back
 

@@ -29,6 +29,8 @@ def test_public_evidence_page_and_machine_readable_proof():
     assert body["evaluation"]["safety_gate"] == {"passed": 16, "total": 16}
     assert body["evaluation"]["candidate_examples"] == 200
     assert body["evaluation"]["human_verified_examples"] == 0
+    assert body["evaluation"]["primary_predictions"] == 200
+    assert body["evaluation"]["provisional_judge_scores"] == 200
     assert body["evaluation"]["headline_metrics_status"] == "pending_human_labels"
     assert body["leakage_control"]["component_disjoint"] is True
 

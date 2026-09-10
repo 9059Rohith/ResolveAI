@@ -35,6 +35,10 @@ def audit_repository() -> dict:
     threads = _json("data/processed/thread_stats.json")
     safety = _json("eval/results/safety_metrics.json")
     evidence = _json("data/processed/evidence_summary.json")
+    primary_predictions = read_jsonl(ROOT / "eval/results/primary_llm_predictions.jsonl")
+    prediction_diagnostics = _json("eval/results/prediction_diagnostics.json")
+    judge_scores = read_jsonl(ROOT / "eval/llm_judge_scores.jsonl")
+    judge_usage = _json("eval/results/judge_usage.json")
     report = (ROOT / "REPORT.md").read_text(encoding="utf-8")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     decisions = (ROOT / "DECISIONS.md").read_text(encoding="utf-8")
@@ -50,12 +54,23 @@ def audit_repository() -> dict:
         "component_disjoint": sampling["component_disjoint"] is True,
         "balanced_intent_suggestions": set(sampling["intent_suggestions"].values()) == {25},
         "safety_gate_passes": safety["passed"] == safety["total"] == 16,
+        "prediction_artifacts_complete": len(primary_predictions) == len(golden) == 200
+        and {row["example_id"] for row in primary_predictions}
+        == {row["example_id"] for row in golden}
+        and prediction_diagnostics["status"]
+        == "label_free_diagnostics_not_quality_evaluation",
+        "provisional_judge_artifacts_complete": len(judge_scores) == len(golden) == 200
+        and {row["example_id"] for row in judge_scores}
+        == {row["example_id"] for row in golden}
+        and judge_usage["reference_basis"] == {"historical_reply_proxy": 200},
         "public_evidence_matches_artifacts": evidence["dataset"]["raw_tweets"]
         == threads["raw_tweets"]
         and evidence["dataset"]["spotify_threads"] == threads["threads"]
         and evidence["dataset"]["retrieval_threads"] == sampling["retrieval_threads"]
         and evidence["evaluation"]["candidate_examples"] == len(golden)
         and evidence["evaluation"]["human_verified_examples"] == human_verified
+        and evidence["evaluation"]["primary_predictions"] == len(primary_predictions)
+        and evidence["evaluation"]["provisional_judge_scores"] == len(judge_scores)
         and evidence["evaluation"]["safety_gate"]
         == {"passed": safety["passed"], "total": safety["total"]},
         "decision_log_has_15_items": decisions.count("- **") == 15,
@@ -77,8 +92,8 @@ def audit_repository() -> dict:
         pending.append("200 hand-labelled examples")
     if paired_ratings < 30:
         pending.append("at least 30 paired human/judge ratings")
-    if not (ROOT / "eval/results/metrics.json").exists():
-        pending.append("live primary-system evaluation")
+    if human_verified < 200 or not (ROOT / "eval/results/metrics.json").exists():
+        pending.append("human-labelled comparative metrics")
     return {
         "software_ready": all(checks.values()),
         "verified_checks": sum(checks.values()),
