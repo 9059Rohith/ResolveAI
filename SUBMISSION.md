@@ -10,7 +10,7 @@
 
 ## Suggested submission summary
 
-Resolve is an auditable SpotifyCares support agent built from the Customer Support on Twitter dataset. It reconstructs 28,221 Spotify threads from both reply-edge fields, creates a component-disjoint 5,000-thread retrieval corpus, classifies eight data-derived intents, drafts from cited historical precedents, and applies an independent deterministic escalation gate. The live FastAPI service includes a reviewer workbench, machine-readable evidence endpoint, privacy-minimizing audit log, two baselines, a 200-example annotation protocol, six-dimension LLM judge, judge-human agreement harness, and a 16/16 adversarial launch gate. The repository deliberately withholds headline model-quality metrics until the required human labels and paired ratings exist.
+Resolve is an auditable SpotifyCares support agent built from the Customer Support on Twitter dataset. It reconstructs 28,221 Spotify threads from both reply-edge fields, creates a component-disjoint 5,000-thread retrieval corpus, classifies eight data-derived intents, drafts from cited historical precedents, and applies an independent deterministic escalation gate. On 200 human-labelled cases, the primary system achieves 64.5% intent accuracy and 90.5% escalation recall. The package includes two baselines, confidence intervals, five measured failures, 200 human-reference judge scores, agreement against 32 blind human ratings, and a 16/16 adversarial launch gate.
 
 ## Three-minute reviewer path
 
@@ -20,13 +20,6 @@ Resolve is an auditable SpotifyCares support agent built from the Customer Suppo
 4. Read [REPORT.md](REPORT.md) for the baselines, five concrete failure modes, misleading-number analysis, and one-week plan.
 5. Run `uv run python -m scripts.audit_submission` for the artifact audit and `uv run pytest -q` for the complete test suite.
 
-## Final applicant-owned evidence gate
+## Final submission status
 
-Before submitting the form, the applicant must complete these evidence-producing steps:
-
-1. Run `uv run python -m scripts.label_golden` and personally adjudicate all 200 candidates.
-2. Run the trivial, simple, and primary metrics with `uv run python -m eval.run_eval --reuse-predictions`; all 200 simple and primary predictions are already saved.
-3. Run `uv run python -m eval.run_judge --system primary_llm --workers 6` to replace provisional historical references with human directions, complete 32 blind ratings with `uv run python -m scripts.rate_judge`, and run `uv run python -m eval.judge_human_agreement`.
-4. Copy the resulting metrics and measured golden-set failures into [REPORT.md](REPORT.md), then submit the repository and report through the [Hiver Notion form](https://intelligent-bar-256.notion.site/39492cbf0da2800682cfc78a600a745f).
-
-These steps are intentionally not automated or pre-filled: the assignment explicitly asks for a hand-labelled set and evidence of agreement with a human.
+The human evidence and all reproducible evaluation artifacts are complete. Before sending the form, run `uv run python -m scripts.audit_submission`, confirm the deployed links above, and review [REPORT.md](REPORT.md). The applicant must personally submit the repository and report through the [Hiver Notion form](https://intelligent-bar-256.notion.site/39492cbf0da2800682cfc78a600a745f).

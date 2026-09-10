@@ -25,6 +25,9 @@ def audit_repository() -> dict:
         "eval/labeling_notes.md",
         "eval/safety_cases.jsonl",
         "eval/results/safety_metrics.json",
+        "eval/results/metrics.json",
+        "eval/results/judge_human_agreement.json",
+        "docs/demo/resolve-ai-complete-demo.mp4",
         "Dockerfile",
         "vercel.json",
         ".github/workflows/ci.yml",
@@ -39,6 +42,7 @@ def audit_repository() -> dict:
     prediction_diagnostics = _json("eval/results/prediction_diagnostics.json")
     judge_scores = read_jsonl(ROOT / "eval/llm_judge_scores.jsonl")
     judge_usage = _json("eval/results/judge_usage.json")
+    judge_agreement = _json("eval/results/judge_human_agreement.json")
     report = (ROOT / "REPORT.md").read_text(encoding="utf-8")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     decisions = (ROOT / "DECISIONS.md").read_text(encoding="utf-8")
@@ -59,10 +63,11 @@ def audit_repository() -> dict:
         == {row["example_id"] for row in golden}
         and prediction_diagnostics["status"]
         == "label_free_diagnostics_not_quality_evaluation",
-        "provisional_judge_artifacts_complete": len(judge_scores) == len(golden) == 200
+        "judge_artifacts_complete": len(judge_scores) == len(golden) == 200
         and {row["example_id"] for row in judge_scores}
         == {row["example_id"] for row in golden}
-        and judge_usage["reference_basis"] == {"historical_reply_proxy": 200},
+        and judge_usage["reference_basis"] == {"human_reference": 200}
+        and judge_agreement["paired_examples"] == paired_ratings == 32,
         "public_evidence_matches_artifacts": evidence["dataset"]["raw_tweets"]
         == threads["raw_tweets"]
         and evidence["dataset"]["spotify_threads"] == threads["threads"]
@@ -70,7 +75,11 @@ def audit_repository() -> dict:
         and evidence["evaluation"]["candidate_examples"] == len(golden)
         and evidence["evaluation"]["human_verified_examples"] == human_verified
         and evidence["evaluation"]["primary_predictions"] == len(primary_predictions)
-        and evidence["evaluation"]["provisional_judge_scores"] == len(judge_scores)
+        and evidence["evaluation"]["judge_scores"] == len(judge_scores)
+        and evidence["evaluation"]["paired_human_ratings"] == paired_ratings
+        and evidence["evaluation"]["judge_reference_basis"] == "human_reference"
+        and evidence["evaluation"]["headline_metrics_status"] == "complete"
+        and evidence["evaluation"]["judge_agreement_status"] == "complete"
         and evidence["evaluation"]["safety_gate"]
         == {"passed": safety["passed"], "total": safety["total"]},
         "decision_log_has_15_items": decisions.count("- **") == 15,
@@ -83,7 +92,8 @@ def audit_repository() -> dict:
         "readme_has_fast_path": "## Fifteen-minute reproduction" in readme,
         "readme_has_live_deployment": "https://resolve-ai-wheat.vercel.app" in readme,
         "readme_has_poster": "docs/assets/resolve-poster.png" in readme
-        and (ROOT / "docs/assets/resolve-poster.png").exists(),
+        and (ROOT / "docs/assets/resolve-poster.png").exists()
+        and "docs/demo/resolve-ai-complete-demo.mp4" in readme,
         "environment_template_is_sanitized": "OPENAI_API_KEY=your_openai_api_key_here"
         in env_template,
     }

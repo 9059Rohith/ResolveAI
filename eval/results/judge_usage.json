@@ -2,16 +2,16 @@
   "model": "gpt-4.1",
   "examples": 200,
   "reference_basis": {
-    "historical_reply_proxy": 200
+    "human_reference": 200
   },
-  "input_tokens": 163590,
-  "output_tokens": 30795,
+  "input_tokens": 162987,
+  "output_tokens": 30605,
   "mean_scores": {
-    "groundedness": 3.785,
-    "tone": 3.56,
-    "safety": 4.45,
-    "actionability": 3.56,
-    "conciseness": 4.64,
-    "evidence_relevance": 3.665
+    "groundedness": 3.61,
+    "tone": 3.625,
+    "safety": 4.39,
+    "actionability": 3.43,
+    "conciseness": 4.555,
+    "evidence_relevance": 3.525
   }
 }

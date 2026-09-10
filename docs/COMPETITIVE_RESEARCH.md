@@ -4,7 +4,7 @@ Research date: 2026-09-10. This review searched public GitHub implementations, t
 
 ## Executive finding
 
-The strongest differentiator for this assignment is evidence quality. Many public projects have a polished RAG demo, citations, Docker, and an escalation rule. Far fewer combine a leakage-safe reconstruction of the actual 3M-tweet source, a 200-case human-label protocol, two baselines, cost-sensitive routing metrics, human validation of an LLM judge, adversarial launch gates, privacy-minimizing audit logs, and explicit refusal to publish scores before the required human work exists.
+The strongest differentiator for this assignment is evidence quality. Many public projects have a polished RAG demo, citations, Docker, and an escalation rule. Far fewer combine a leakage-safe reconstruction of the actual 3M-tweet source, a 200-case human-label protocol, two baselines, cost-sensitive routing metrics, human validation of an LLM judge, adversarial launch gates, privacy-minimizing audit logs, and publication of scores only after the required human work was completed.
 
 Resolve now implements that full measurement surface. Its main unresolved dependency is also explicit: the assignment requires a human-built golden set and measured judge-human agreement. The repository supplies 200 candidates and the complete workflow but will not misrepresent machine suggestions as human work.
 
@@ -77,13 +77,13 @@ NIST’s Generative AI Profile emphasizes documented pre-deployment testing, hum
 | Aggregate metrics hide the automation tradeoff | Added unsafe auto-handle rate, coverage, calibration, risk-coverage, and bootstrap intervals | Unit tests cover exact metric behavior and reproducibility |
 | No explicit pre-deployment edge-case gate | Added 16 versioned cases and a command that exits non-zero on any failure | Current local result: 16/16; artifact saved under `eval/results/` |
 
-## Remaining gaps and priority
+## Residual gaps and priority
 
 | Priority | Gap | Why it matters | Required closure |
 |---:|---|---|---|
-| P0 | Human labels are pending | The assignment explicitly requires a hand-labelled 150–250 example golden set | Applicant reviews all 200 candidates and records metadata |
-| P0 | Judge-human agreement is pending | An automated judge cannot validate itself | Human scores at least 30 frozen replies, then runs the paired agreement command |
-| P0 | Primary-model results need credentials | Local wiring and tests do not prove live LLM answer quality | Run the frozen evaluation with an API key and save outputs |
+| Closed | Human labels | 200 examples are manually adjudicated | Add a second annotator to measure label agreement |
+| Closed | Judge-human agreement | 32 blind pairs now expose strong and weak judge dimensions | Increase paired sample and add a second rater |
+| Closed | Primary-model results | Frozen outputs and human-labelled metrics are checked in | Repeat only after a versioned model or prompt change |
 | P1 | Resolution labels are proxies | Public silence is confounded by abandonment and DM transfer | Manually outcome-audit heavily retrieved threads |
 | P1 | No live support shadow data | Historical Twitter language and policies can drift | Run reviewer-only shadow traffic and measure edits/overrides |
 | P2 | No cross-encoder reranker | Hybrid lexical similarity still confuses nearby topics | Label relevant precedents and compare reranked Recall@k/nDCG |

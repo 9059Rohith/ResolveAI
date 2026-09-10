@@ -16,16 +16,16 @@ Audited against `Hiver SDE Intern Assignment.docx` and the detailed project brie
 | Persistent vector store | Optional Chroma adapter, local stable embeddings, reproducible index command; lean path uses the same matrix in memory | Complete |
 | Provider abstraction | Thin structured-output client with schema validation, timeout and retries | Complete |
 | Prompt-injection handling | Untrusted-data fencing, deterministic action gate, regression test | Complete |
-| 150–250 hand-labelled golden examples | 200 candidates exist; no human has completed the labels | **Pending human work** |
-| Automated evaluation metrics | Accuracy, macro-F1, confusion matrix, routing metrics, calibration, risk-coverage, bootstrap intervals, retrieval coverage, latency and cost | Complete; execution gated by labels |
-| LLM judge rubric | Six explicit 1–5 dimensions and independent judge command | Complete; 200/200 provisional `gpt-4.1` scores saved; human agreement pending |
-| Judge–human agreement | Kappa, Pearson correlation, means and ≥30-pair guard | Complete harness; **pending human scores and judge run** |
+| 150-250 hand-labelled golden examples | 200/200 manually adjudicated across intent, reply direction, escalation, and reason | Complete |
+| Automated evaluation metrics | Accuracy, macro-F1, confusion matrix, routing metrics, calibration, risk-coverage, bootstrap intervals, retrieval coverage, latency and cost | Complete; measured on 200 human labels |
+| LLM judge rubric | Six explicit 1-5 dimensions and independent judge command | Complete; 200/200 `gpt-4.1` scores use human references |
+| Judge-human agreement | Kappa, Pearson correlation, means and >=30-pair guard | Complete; 32/32 blind human pairs measured |
 | Trivial baseline | Majority/`other`, canned response, always escalate | Complete |
 | Simple baseline | Transparent keyword classification, local retrieval/drafting, threshold router | Complete |
-| Primary system | Structured LLM classifier/drafter plus same deterministic safety gate | Complete; `gpt-4.1-mini` grounded-draft smoke passed; comparison needs labels |
-| Results comparison | One-set evaluator and report table | **Pending human labels/API evaluation** |
-| Five failure modes | Report includes concrete risk examples and causal hypotheses | Complete as development audit; measured golden failures pending |
-| “Misleading headline number” | Dedicated report section, including why none is claimed yet | Complete |
+| Primary system | Structured LLM classifier/drafter plus same deterministic safety gate | Complete; measured against both baselines |
+| Results comparison | One-set evaluator and report table | Complete with two baselines, confidence intervals, routing safety, latency, and cost |
+| Five failure modes | Report includes five measured golden-set errors and causal hypotheses | Complete |
+| "Misleading headline number" | Dedicated report section covering sampling, annotator, proxy, agreement, and operational limits | Complete |
 | One-more-week plan | Five prioritized actions tied to failures | Complete |
 | Decision log | 15 decisions with reasons | Complete |
 | README under-15-minute path | Exact cached commands, timings, corpus size, models and pricing | Complete; timings should be reconfirmed on reviewer network |
@@ -43,4 +43,4 @@ Audited against `Hiver SDE Intern Assignment.docx` and the detailed project brie
 
 ## Honest completion verdict
 
-The software implementation is end-to-end and deployment-packaged. The take-home submission is **not 100% complete** until the applicant personally labels the 200 candidates, personally scores at least 30 replies, runs the live LLM evaluations with an API key, updates the report with measured results and real golden-set failures, publishes the repository, and submits the form. Those are evidence-producing human/external actions; generating or claiming them automatically would violate the assignment.
+The repository package is complete: 200/200 human labels, frozen baseline and primary predictions, 200 human-reference judge scores, 32 blind human ratings, measured agreement, a final report, passing safety gate, and deployment artifacts are checked in. The only external account actions are restoring the GitHub Actions runner if desired and sending the links through the Hiver form.

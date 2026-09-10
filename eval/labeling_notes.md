@@ -10,14 +10,14 @@ Run `uv run python scripts/label_golden.py`. For every item, read the first cust
 
 Tie-break order: choose the underlying requested resolution over emotion; choose account access over app issue when identity is the blocker; choose billing over plan question when money has moved; use `other` when no single documented intent captures the request. Mark sarcasm, code-mixing, injection text, and weak/no precedent in `strata` when encountered.
 
-## Current evidence status
+## Completed evidence
 
-The repository generator creates 200 candidates, not human labels. A real human must complete the protocol and record their elapsed time here before `eval/run_eval.py` will run. This fail-closed gate prevents machine suggestions from being misrepresented as hand labels.
+All 200 candidates were manually reviewed through the resume-safe terminal protocol. The evaluator subsequently reused the prediction files frozen before labels were read. The same rater independently scored 32 selected replies without seeing the LLM judge scores; the paired agreement file records all six dimensions.
 
-- Annotator: pending
-- Labelling date: pending
-- Elapsed time: pending
-- Disagreements/second rater: none recorded
-- Known ambiguity notes: pending annotation
+- Annotator: applicant (blind-rating identifier `r-1`)
+- Labelling date: 2026-09-11
+- Elapsed time: not captured by the CLI across resumed sessions
+- Disagreements/second rater: no second rater; no adjudication performed
+- Known ambiguity notes: recurring boundaries included plan versus account access, billing versus account access, playback versus app/device, and whether persistent low-risk issues warranted escalation
 
-For judge agreement, run `uv run python -m scripts.rate_judge`. It selects four cases per machine-suggested intent (32 total), prioritises edge-case strata, displays the customer message, reference, frozen primary draft and evidence, and never displays the LLM judge score. It saves after every rating and can be resumed. The independent judge has already scored all 200 frozen replies using the historical response as a disclosed provisional reference. After the human labels add ideal directions, rerunning `eval.run_judge` refreshes any score whose reference basis changed. `eval.judge_human_agreement` refuses fewer than 30 paired records.
+The judge was refreshed after labeling and all 200 scores now use `human_reference`. `scripts.rate_judge` selected four cases per machine-suggested intent (32 total), prioritized edge-case strata, and never displayed the LLM score. Agreement is reported in `eval/results/judge_human_agreement.json`; safety Pearson correlation is `null` because all 32 human safety scores were 5, producing zero variance.

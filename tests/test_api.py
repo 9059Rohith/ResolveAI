@@ -1,9 +1,11 @@
 import os
+import time
 
 from fastapi.testclient import TestClient
 
 os.environ["APP_API_TOKEN"] = "test-token"
-from api.main import app  # noqa: E402
+from api.main import app, calls  # noqa: E402
+from src.settings import SETTINGS  # noqa: E402
 
 client = TestClient(app)
 
@@ -28,10 +30,12 @@ def test_public_evidence_page_and_machine_readable_proof():
     assert body["dataset"]["spotify_threads"] == 28_221
     assert body["evaluation"]["safety_gate"] == {"passed": 16, "total": 16}
     assert body["evaluation"]["candidate_examples"] == 200
-    assert body["evaluation"]["human_verified_examples"] == 0
+    assert body["evaluation"]["human_verified_examples"] == 200
     assert body["evaluation"]["primary_predictions"] == 200
-    assert body["evaluation"]["provisional_judge_scores"] == 200
-    assert body["evaluation"]["headline_metrics_status"] == "pending_human_labels"
+    assert body["evaluation"]["judge_scores"] == 200
+    assert body["evaluation"]["paired_human_ratings"] == 32
+    assert body["evaluation"]["headline_metrics_status"] == "complete"
+    assert body["evaluation"]["judge_agreement_status"] == "complete"
     assert body["leakage_control"]["component_disjoint"] is True
 
 
@@ -55,3 +59,31 @@ def test_unknown_mode_is_rejected():
         json={"message": "hello", "mode": "magic"},
     )
     assert response.status_code == 422
+
+
+def test_rate_limit_only_applies_to_analysis_and_returns_429_json():
+    calls.clear()
+    calls["testclient"].extend([time.monotonic()] * SETTINGS.api.requests_per_minute)
+
+    assert client.get("/healthz").status_code == 200
+    response = client.post(
+        "/v1/analyze",
+        headers={"Authorization": "Bearer test-token"},
+        json={"message": "songs keep pausing"},
+    )
+
+    assert response.status_code == 429
+    assert response.json() == {"detail": "Rate limit exceeded"}
+
+
+def test_oversized_analysis_body_returns_413_json():
+    calls.clear()
+
+    response = client.post(
+        "/v1/analyze",
+        headers={"Authorization": "Bearer test-token", "Content-Type": "application/json"},
+        content=b"x" * (SETTINGS.api.max_body_bytes + 1),
+    )
+
+    assert response.status_code == 413
+    assert response.json() == {"detail": "Request body too large"}

@@ -7,10 +7,37 @@ from src.evaluation import (
     bootstrap_proportion_interval,
     calibration_metrics,
     classification_metrics,
+    judge_human_agreement,
     require_complete_labels,
     routing_metrics,
     selective_risk_curve,
 )
+
+
+def test_judge_human_agreement_pairs_human_subset_by_example_id():
+    dimensions = ["groundedness"]
+    human = [
+        {"example_id": f"case-{index}", "groundedness": (index % 5) + 1}
+        for index in range(32)
+    ]
+    judge = [
+        {"example_id": f"case-{index}", "groundedness": (index % 5) + 1}
+        for index in reversed(range(200))
+    ]
+
+    result = judge_human_agreement(human, judge, dimensions)
+
+    assert result["groundedness"]["weighted_kappa"] == pytest.approx(1.0)
+    assert result["groundedness"]["pearson_r"] == pytest.approx(1.0)
+
+
+def test_judge_human_agreement_uses_null_for_constant_score_correlation():
+    human = [{"example_id": f"case-{index}", "safety": 5} for index in range(30)]
+    judge = [{"example_id": f"case-{index}", "safety": 4 + index % 2} for index in range(30)]
+
+    result = judge_human_agreement(human, judge, ["safety"])
+
+    assert result["safety"]["pearson_r"] is None
 
 
 def test_incomplete_golden_set_is_rejected():

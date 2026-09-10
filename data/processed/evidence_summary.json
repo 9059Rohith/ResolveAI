@@ -1,7 +1,7 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "brand": "SpotifyCares",
-  "verified_at": "2026-09-10",
+  "verified_at": "2026-09-11",
   "dataset": {
     "raw_tweets": 2811774,
     "spotify_neighborhood_tweets": 91889,
@@ -17,12 +17,22 @@
   "evaluation": {
     "safety_gate": {"passed": 16, "total": 16},
     "candidate_examples": 200,
-    "human_verified_examples": 0,
+    "human_verified_examples": 200,
     "primary_predictions": 200,
-    "provisional_judge_scores": 200,
-    "judge_reference_basis": "historical_reply_proxy",
-    "headline_metrics_status": "pending_human_labels",
-    "judge_agreement_status": "pending_human_ratings"
+    "judge_scores": 200,
+    "paired_human_ratings": 32,
+    "judge_reference_basis": "human_reference",
+    "headline_metrics_status": "complete",
+    "judge_agreement_status": "complete",
+    "headline_results": {
+      "primary_intent_accuracy": 0.645,
+      "primary_intent_accuracy_95_ci": [0.575, 0.71],
+      "primary_escalation_recall": 0.9047619048,
+      "primary_escalation_recall_95_ci": [0.8476190476, 0.9523809524],
+      "primary_unsafe_auto_handle_rate": 0.1666666667,
+      "simple_intent_accuracy": 0.67,
+      "trivial_intent_accuracy": 0.075
+    }
   },
   "system": {
     "intents": 8,

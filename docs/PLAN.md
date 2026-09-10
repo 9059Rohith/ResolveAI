@@ -6,7 +6,7 @@ The user authorizes autonomous implementation and overrides review pauses. This 
 
 Use FastAPI plus a small same-origin HTML/CSS/JavaScript workbench. Keep pipeline modules independent: data reconstruction, cleaning, classification, retrieval, drafting, deterministic routing, evaluation and annotation persistence. Use disk-backed SQLite to reconstruct the raw corpus without loading 3M tweets. Select one brand after inspecting volume and examples. Split by connected conversation component before constructing retrieval or evaluation samples. Ship a compact redacted snapshot with source IDs and hashes.
 
-Primary LLM pipeline uses a provider adapter with validated JSON, bounded retries and a fail-closed router. Local retrieval/template mode is a runnable zero-key comparison, never represented as an LLM. Chroma stores locally computed hashing vectors for reproducible, download-free retrieval; TF-IDF provides the simple baseline. Human annotations and human judge scores remain empty until a real human records them. Candidate labels are explicitly machine suggestions.
+Primary LLM pipeline uses a provider adapter with validated JSON, bounded retries and a fail-closed router. Local retrieval/template mode is a runnable zero-key comparison, never represented as an LLM. Chroma stores locally computed hashing vectors for reproducible, download-free retrieval; TF-IDF provides the simple baseline. Candidate labels begin as explicit machine suggestions. The checked-in final state contains 200 manually adjudicated labels and 32 blind human judge ratings, while prediction artifacts remain separate from labels.
 
 ## Execution and checks
 
@@ -19,4 +19,4 @@ Primary LLM pipeline uses a provider adapter with validated JSON, bounded retrie
 
 ## Acceptance truth
 
-Do not synthesize human evidence. Verify local execution and provider adapter contract tests; explicitly report missing live-provider, human annotation, judge agreement or deployment evidence. No submission or external publication is authorized by the request to make the application deployment ready.
+Human evidence must remain attributable to the real rater. The final package includes live-provider predictions, complete human annotation, measured judge agreement, deployment evidence, and explicit limitations in the report.

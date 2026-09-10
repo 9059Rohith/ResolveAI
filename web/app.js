@@ -7,11 +7,17 @@ fetch('/readyz').then((response) => response.json()).then((data) => {
   }
 }).catch(() => {});
 $('analyze').addEventListener('click', async () => {
+  const message = $('message').value.trim();
+  if (!message) {
+    $('error').textContent = 'Enter a customer message before running the analysis.';
+    $('message').focus();
+    return;
+  }
   const button = $('analyze'); button.disabled = true; button.firstChild.textContent = 'Analyzing… ';
   $('error').textContent = '';
   try {
-    const response = await fetch('/v1/analyze', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({message:$('message').value, mode:$('mode').value})});
-    const data = await response.json(); if(!response.ok) throw new Error(data.detail || 'Analysis failed');
+    const response = await fetch('/v1/analyze', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({message, mode:$('mode').value})});
+    const data = await response.json(); if(!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'The message could not be analyzed. Check the input and try again.');
     $('results').classList.remove('hidden');
     $('intent').textContent = data.classification.intent.replaceAll('_',' ');
     const pct = Math.round(data.classification.confidence*100); $('confidence').textContent = `${pct}% confidence · ${data.classification.rationale}`; $('confidence-bar').style.width = `${pct}%`;

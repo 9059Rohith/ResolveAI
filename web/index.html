@@ -16,7 +16,7 @@
     </section>
     <section class="composer">
       <label for="message">Incoming customer message</label>
-      <textarea id="message" rows="4">My Spotify songs keep pausing every few seconds on my phone.</textarea>
+      <textarea id="message" rows="4" maxlength="2000" required>My Spotify songs keep pausing every few seconds on my phone.</textarea>
       <div class="actions"><select id="mode"><option value="local">Local reproducible mode</option><option value="llm">LLM mode</option></select><button id="analyze">Analyze message <span>→</span></button></div>
       <p id="error" role="alert"></p>
     </section>

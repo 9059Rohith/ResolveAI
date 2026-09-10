@@ -17,7 +17,7 @@
     <section class="proof-hero">
       <p class="overline">Evaluation evidence</p>
       <h1>Proof before<br>confidence.</h1>
-      <p>Every number below is backed by a checked-in artifact or a reproducible command. Missing human evidence stays visibly missing.</p>
+      <p>Every number below is backed by a checked-in artifact or a reproducible command. Human labels, frozen predictions, and blind judge-agreement ratings are complete.</p>
     </section>
 
     <section class="number-strip" aria-label="Dataset statistics">
@@ -35,11 +35,11 @@
         <p>Prompt injection, billing, account access, privacy, ambiguity, out-of-domain messages, and safe auto-handle controls.</p>
         <code>uv run python -m eval.run_safety_eval</code>
       </article>
-      <article class="proof-card pending">
-        <div class="proof-label"><span>Pending</span><small>human-produced evidence</small></div>
-        <strong class="score"><span id="human-labels">0</span>/200</strong>
+      <article class="proof-card verified">
+        <div class="proof-label"><span>Verified</span><small>human-produced evidence</small></div>
+        <strong class="score"><span id="human-labels">200</span>/200</strong>
         <h2>Hand-labelled golden set</h2>
-        <p>The 200 component-disjoint candidates are frozen and balanced. They remain candidates until the applicant personally adjudicates them.</p>
+        <p>All component-disjoint candidates were manually adjudicated across intent, ideal reply direction, escalation, and routing reason.</p>
         <code>uv run python -m scripts.label_golden</code>
       </article>
     </section>
@@ -52,12 +52,12 @@
         <p>Every candidate has a saved `gpt-4.1-mini` classification, draft, route, cited evidence, latency, tokens, and cost. No label field was read.</p>
         <code>uv run python -m eval.generate_predictions --system primary_llm</code>
       </article>
-      <article class="proof-card provisional">
-        <div class="proof-label"><span>Provisional</span><small>awaiting human agreement</small></div>
+      <article class="proof-card verified">
+        <div class="proof-label"><span>Verified</span><small><span id="human-ratings">32</span> blind human pairs</small></div>
         <strong class="score"><span id="judge-scores">200</span>/200</strong>
         <h2>Independent judge scores</h2>
-        <p>`gpt-4.1` scored six reply dimensions using historical responses as a disclosed proxy. These become quality evidence only after blind human agreement.</p>
-        <code>uv run python -m scripts.rate_judge</code>
+        <p>`gpt-4.1` scored six reply dimensions against human references. Agreement was measured on 32 independently rated replies and is reported without suppressing weak dimensions.</p>
+        <code>uv run python -m eval.judge_human_agreement</code>
       </article>
     </section>
 
@@ -86,11 +86,11 @@
     <section class="evidence-section">
       <div class="section-title"><p class="overline">03 / evaluation contract</p><h2>Three systems, one frozen set</h2></div>
       <div class="systems-grid">
-        <article><span>Trivial</span><h3>Majority + canned handoff</h3><p>A deliberately weak floor that always escalates.</p></article>
-        <article><span>Simple</span><h3>Keywords + local retrieval</h3><p>A transparent, deterministic baseline with no API cost.</p></article>
-        <article><span>Primary</span><h3>Structured LLM + same safety gate</h3><p>Compared on identical examples, metrics, and routing policy.</p></article>
+        <article><span>Trivial</span><h3>7.5% intent accuracy</h3><p>100% escalation recall, 0% auto-handle coverage. A deliberately weak floor that always escalates.</p></article>
+        <article><span>Simple</span><h3>67.0% intent accuracy</h3><p>65.7% escalation recall and 35.0% unsafe auto-handle rate. Transparent and free, but too permissive.</p></article>
+        <article><span>Primary</span><h3>64.5% intent accuracy</h3><p>90.5% escalation recall and 16.7% unsafe auto-handle rate. Safer routing at lower automation coverage.</p></article>
       </div>
-      <p class="evidence-note"><strong>Evidence boundary:</strong> headline accuracy, reply-quality, and judge-agreement results are intentionally withheld until 200 human labels and at least 30 paired ratings exist. Primary predictions and provisional judge scores are already frozen for every candidate.</p>
+      <p class="evidence-note"><strong>Measured boundary:</strong> the primary model does not beat the simple baseline on intent accuracy; its benefit is higher escalation recall and fewer unsafe automatic handles. Results come from one edge-heavy, single-annotator historical Twitter set. See the report for confidence intervals and judge-agreement limitations.</p>
     </section>
 
     <section class="cta-panel">

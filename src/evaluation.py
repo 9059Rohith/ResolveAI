@@ -115,15 +115,26 @@ def latency_metrics(values: list[float]) -> dict:
 
 
 def judge_human_agreement(human: list[dict], judge: list[dict], dimensions: list[str]) -> dict:
-    if len(human) < 30 or len(human) != len(judge):
+    if any(not row.get("example_id") for row in human + judge):
+        raise ValueError("Agreement rows require example_id values.")
+    human_by_id = {row["example_id"]: row for row in human}
+    judge_by_id = {row["example_id"]: row for row in judge}
+    if len(human_by_id) != len(human) or len(judge_by_id) != len(judge):
+        raise ValueError("Agreement rows require unique example_id values.")
+    pair_ids = [row["example_id"] for row in human if row["example_id"] in judge_by_id]
+    if len(pair_ids) < 30:
         raise ValueError("Agreement requires at least 30 paired human and judge ratings.")
-    result = {}
+    result = {"paired_examples": len(pair_ids)}
     for dimension in dimensions:
-        h = [int(row[dimension]) for row in human]
-        j = [int(row[dimension]) for row in judge]
+        h = [int(human_by_id[example_id][dimension]) for example_id in pair_ids]
+        j = [int(judge_by_id[example_id][dimension]) for example_id in pair_ids]
+        kappa = float(cohen_kappa_score(h, j, weights="quadratic"))
+        pearson = None
+        if np.std(h) > 0 and np.std(j) > 0:
+            pearson = float(np.corrcoef(h, j)[0, 1])
         result[dimension] = {
-            "weighted_kappa": float(cohen_kappa_score(h, j, weights="quadratic")),
-            "pearson_r": float(np.corrcoef(h, j)[0, 1]),
+            "weighted_kappa": kappa if np.isfinite(kappa) else None,
+            "pearson_r": pearson,
             "mean_human": float(np.mean(h)),
             "mean_judge": float(np.mean(j)),
         }

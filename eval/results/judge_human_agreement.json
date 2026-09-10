@@ -1,0 +1,39 @@
+{
+  "paired_examples": 32,
+  "groundedness": {
+    "weighted_kappa": 0.38173302107728335,
+    "pearson_r": 0.5699126514761607,
+    "mean_human": 4.53125,
+    "mean_judge": 3.8125
+  },
+  "tone": {
+    "weighted_kappa": -0.0056116722783390305,
+    "pearson_r": -0.042100132152522236,
+    "mean_human": 4.96875,
+    "mean_judge": 3.84375
+  },
+  "safety": {
+    "weighted_kappa": 0.0,
+    "pearson_r": null,
+    "mean_human": 5.0,
+    "mean_judge": 4.46875
+  },
+  "actionability": {
+    "weighted_kappa": 0.5680981595092025,
+    "pearson_r": 0.6785611068196024,
+    "mean_human": 3.96875,
+    "mean_judge": 3.46875
+  },
+  "conciseness": {
+    "weighted_kappa": 0.11520737327188935,
+    "pearson_r": 0.17054221752815665,
+    "mean_human": 4.90625,
+    "mean_judge": 4.59375
+  },
+  "evidence_relevance": {
+    "weighted_kappa": 0.5979202772963605,
+    "pearson_r": 0.6667628390753498,
+    "mean_human": 4.15625,
+    "mean_judge": 3.6875
+  }
+}

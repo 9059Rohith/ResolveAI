@@ -7,7 +7,7 @@ from collections import defaultdict, deque
 
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -36,16 +36,18 @@ def auth(authorization: str | None = Header(default=None)) -> None:
 
 @app.middleware("http")
 async def limits(request: Request, call_next):
+    if request.url.path != "/v1/analyze" or request.method != "POST":
+        return await call_next(request)
     length = int(request.headers.get("content-length") or 0)
     if length > SETTINGS.api.max_body_bytes:
-        raise HTTPException(413, "Request body too large")
+        return JSONResponse({"detail": "Request body too large"}, status_code=413)
     address = request.client.host if request.client else "unknown"
     now = time.monotonic()
     queue = calls[address]
     while queue and queue[0] < now - 60:
         queue.popleft()
     if len(queue) >= SETTINGS.api.requests_per_minute:
-        raise HTTPException(429, "Rate limit exceeded")
+        return JSONResponse({"detail": "Rate limit exceeded"}, status_code=429)
     queue.append(now)
     return await call_next(request)
 
