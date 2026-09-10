@@ -27,19 +27,18 @@ def main() -> None:
             if raw.isdigit() and 1 <= int(raw) <= len(intents):
                 break
         row["intent"] = intents[int(raw) - 1].value
-        row["reference_reply"] = ask("Ideal reply direction", row["historical_reply"])
+        row["reference_reply"] = ask(
+            "Ideal reply direction", row.get("suggested_reference_reply", row["historical_reply"])
+        )
         while (
             decision := ask(
                 "Escalate? y/n",
-                "y"
-                if row["intent"]
-                in {"billing_or_subscription", "account_access", "security_or_privacy", "other"}
-                else "n",
+                "y" if row.get("suggested_should_escalate") else "n",
             ).lower()
         ) not in {"y", "n"}:
             pass
         row["should_escalate"] = decision == "y"
-        row["escalation_reason"] = ask("Routing reason")
+        row["escalation_reason"] = ask("Routing reason", row.get("suggested_escalation_reason"))
         if not row["escalation_reason"]:
             print("Reason is required; this example remains pending.")
             continue
