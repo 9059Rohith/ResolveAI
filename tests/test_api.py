@@ -22,7 +22,7 @@ def test_analysis_validates_input_and_returns_audit_fields():
     response = client.post("/v1/analyze", headers=headers, json={"message": "songs keep pausing"})
     assert response.status_code == 200
     body = response.json()
-    assert {"classification", "retrieved", "draft", "routing", "latency_ms"} <= body.keys()
+    assert {"request_id", "classification", "retrieved", "draft", "routing", "latency_ms"} <= body.keys()
 
 
 def test_unknown_mode_is_rejected():

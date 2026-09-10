@@ -16,7 +16,7 @@ from src.settings import SETTINGS
 
 load_dotenv()
 app = FastAPI(title="Spotify Support Agent", version="1.0.0", docs_url="/docs")
-local_pipeline = make_pipeline("local")
+local_pipeline = make_pipeline("local", audit=True)
 calls: dict[str, deque] = defaultdict(deque)
 
 
@@ -63,7 +63,7 @@ def ready():
 def analyze(body: AnalyzeRequest):
     if body.mode == "llm":
         try:
-            return make_pipeline("llm").run(body.message)
+            return make_pipeline("llm", audit=True).run(body.message)
         except (RuntimeError, ValueError) as exc:
             raise HTTPException(503, f"LLM mode unavailable: {type(exc).__name__}") from exc
     return local_pipeline.run(body.message)

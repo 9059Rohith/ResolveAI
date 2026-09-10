@@ -9,7 +9,7 @@ HIGH_RISK = {Intent(value) for value in SETTINGS.routing.always_escalate}
 
 
 def route(classification: Classification, best_similarity: float, draft_text: str = "") -> Routing:
-    risks = []
+    risks = list(classification.risk_factors)
     if classification.intent in HIGH_RISK:
         risks.append("high_risk_intent")
     if classification.confidence < SETTINGS.routing.min_intent_confidence:

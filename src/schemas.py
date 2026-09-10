@@ -21,6 +21,7 @@ class Classification(BaseModel):
     intent: Intent
     confidence: float = Field(ge=0, le=1)
     rationale: str = Field(min_length=1, max_length=300)
+    risk_factors: list[str] = Field(default_factory=list, max_length=10)
 
 
 class RetrievalHit(BaseModel):
@@ -54,6 +55,7 @@ class Routing(BaseModel):
 
 class PipelineResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
+    request_id: str
     message: str
     classification: Classification
     retrieved: list[RetrievalHit]

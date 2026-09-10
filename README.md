@@ -3,10 +3,11 @@
 | Submission proof | Status | Reproduce |
 |---|---:|---|
 | Pipeline contract and safety tests | Run `uv run pytest -q` | Local |
+| Adversarial launch gate | **16/16 passed** | `uv run python -m eval.run_safety_eval` |
 | Trivial vs simple vs primary metrics on 200 examples | Blocked until the candidate set is genuinely human-labelled | `uv run python -m eval.run_eval` |
 | Judge–human agreement on ≥30 paired ratings | Blocked until human rubric scores exist | `uv run python -m eval.judge_human_agreement` |
 
-Resolve is an auditable, single-brand support pipeline for **SpotifyCares**. It classifies an incoming message into eight data-informed intents, retrieves similar resolved-proxy conversations, drafts from that precedent, and independently decides whether a human must take over. The API and workbench run without an API key in reproducible local mode; `llm` mode uses structured outputs through a swappable client.
+Resolve is an auditable, single-brand support pipeline for **SpotifyCares**. It classifies an incoming message into eight data-informed intents, retrieves similar resolved-proxy conversations with word-and-character hybrid vectors, drafts from that precedent, and independently decides whether a human must take over. The API and workbench run without an API key in reproducible local mode; `llm` mode uses structured outputs through a swappable client.
 
 > Evaluation status is deliberately fail-closed. `eval/golden_set.jsonl` contains 200 component-disjoint annotation candidates after data preparation, but the harness refuses to call them a golden set until a person records every required label. No headline accuracy or judge-agreement number is fabricated in this repository.
 
@@ -21,6 +22,7 @@ uv run python -m scripts.build_threads             # ~2–4 min; streams 3M rows
 uv run python -m scripts.build_taxonomy            # <1 min
 uv run python -m scripts.prepare_data              # <1 min; 5,000 corpus + 200 candidates
 uv run pytest -q                                   # <1 min
+uv run python -m eval.run_safety_eval              # 16-case launch gate
 uv run uvicorn api.main:app --host 127.0.0.1 --port 8000
 ```
 
@@ -49,7 +51,9 @@ uv run python -m eval.run_judge --system primary_llm
 uv run python -m eval.judge_human_agreement
 ```
 
-`run_eval.py` writes predictions beside labels, never over them. It reports intent accuracy/macro-F1/confusion matrix; escalation precision/recall/F1 and missed escalations; p50/p95 latency; and measured mean request cost. `run_judge.py` scores groundedness, tone, safety, actionability, and conciseness. Agreement reports quadratic weighted kappa, Pearson correlation, score means per dimension, and rejects fewer than 30 pairs.
+`run_eval.py` writes predictions beside labels, never over them. It reports intent accuracy/macro-F1/confusion matrix; escalation precision/recall/F1 and missed escalations; auto-handle coverage and unsafe auto-handle rate; classifier Brier score/ECE and a risk-coverage curve; seeded bootstrap 95% intervals; p50/p95 latency; and measured mean request cost. `run_judge.py` scores groundedness, tone, safety, actionability, conciseness, and evidence relevance. Agreement reports quadratic weighted kappa, Pearson correlation, score means per dimension, and rejects fewer than 30 pairs.
+
+`eval/safety_cases.jsonl` is a separate pre-deployment gate covering prompt injection, financial/account/privacy risk, ambiguity, out-of-domain requests, and negative cases that should be auto-handled. It currently passes 16/16 in local mode. This verifies deterministic contracts, not open-ended LLM reply quality.
 
 ## Architecture
 
@@ -68,7 +72,7 @@ flowchart LR
   I --> J[Metrics + saved predictions]
 ```
 
-The router is a separate hard gate. Billing, account access, security/privacy, `other`, confidence below 0.67, similarity below 0.24, an ungrounded draft, or a draft asking for sensitive identifiers produces `escalate` with explicit risk factors. Model text cannot override it.
+The router is a separate hard gate. Billing, account access, security/privacy, `other`, confidence below 0.67, similarity below 0.24, an ungrounded draft, detected injection, or a draft asking for sensitive identifiers produces `escalate` with explicit risk factors. Injection cases bypass retrieval so irrelevant historical text is not exposed as evidence. Model text cannot override the gate.
 
 ## Service and deployment
 
@@ -78,7 +82,7 @@ Endpoints:
 - `POST /v1/analyze` with `{ "message": "...", "mode": "local|llm" }`
 - `GET /docs` for OpenAPI
 
-Set `APP_API_TOKEN` to require `Authorization: Bearer …` on analysis. The service caps message length, body size, requests per minute, LLM retries, and upstream timeouts. Build a deployment artifact with `docker compose up --build`; the lean container uses the checked-in redacted corpus in memory, runs as an unprivileged user, and exposes a health check. The optional Chroma index is intended for hosts that install the `vector` extra and mount `data/chroma` themselves.
+Set `APP_API_TOKEN` to require `Authorization: Bearer …` on analysis. The service caps message length, body size, requests per minute, LLM retries, and upstream timeouts. Every API/CLI decision appends privacy-minimizing metadata to `data/runtime/audit.jsonl`: request ID, message fingerprint, route, reasons, precedent IDs, confidence, latency, token use, and cost; it stores no message or reply text. Build a deployment artifact with `docker compose up --build`; the lean container uses the checked-in redacted corpus in memory, runs as an unprivileged user, and exposes a health check. The optional Chroma index is intended for hosts that install the `vector` extra and mount `data/chroma` themselves.
 
 ## Repository guide
 
@@ -87,6 +91,7 @@ Set `APP_API_TOKEN` to require `Authorization: Bearer …` on analysis. The serv
 - `src/llm_client.py`: provider boundary, structured schema, timeout and retries
 - `eval/`: frozen candidates, rubric, metrics, judge and agreement scripts
 - `REPORT.md`: assignment report and current evidence limits
+- `docs/COMPETITIVE_RESEARCH.md`: source-backed comparison and implemented quality gaps
 - `DECISIONS.md`: 15 non-obvious choices
 - `CITATIONS.md`: sources, licensing, pricing and AI-assistance disclosure
 

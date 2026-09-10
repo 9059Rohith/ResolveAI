@@ -28,16 +28,47 @@ INJECTION = re.compile(
 )
 
 
+def contains_prompt_injection(message: str) -> bool:
+    """Detect direct attempts to control the support pipeline through customer text."""
+
+    return bool(INJECTION.search(message))
+
+
 class LocalClassifier:
     """Transparent keyword model used for offline demos and a baseline."""
 
     def classify(self, message: str) -> Classification:
         lowered = message.lower()
-        if INJECTION.search(message):
+        if contains_prompt_injection(message):
             return Classification(
                 intent=Intent.OTHER,
                 confidence=0.2,
                 rationale="Potential instruction injection; treated as untrusted customer text.",
+                risk_factors=["prompt_injection"],
+            )
+        if re.search(r"\b(?:charged?|billed?|refund|payment|money)\b", lowered):
+            return Classification(
+                intent=Intent.BILLING,
+                confidence=0.86,
+                rationale="Matched a financially consequential billing signal.",
+            )
+        if re.search(
+            r"(?:someone|somebody|unauthori[sz]ed).{0,45}(?:artist|account|music|release)|"
+            r"(?:music|release).{0,45}(?:under|on).{0,20}(?:my|our).{0,20}(?:artist|account)",
+            lowered,
+        ) or re.search(r"\b(?:personal data|data export|privacy|delete my data)\b", lowered):
+            return Classification(
+                intent=Intent.SECURITY,
+                confidence=0.84,
+                rationale="Matched an account or artist-profile integrity signal.",
+            )
+        if re.search(r"\b(?:family|student)\b", lowered) and re.search(
+            r"\b(?:join|invite|member|plan|eligible|eligibility)\w*\b", lowered
+        ):
+            return Classification(
+                intent=Intent.PLAN,
+                confidence=0.82,
+                rationale="Matched a plan membership or eligibility signal.",
             )
         scores = defaultdict(int)
         for intent, terms in KEYWORDS.items():

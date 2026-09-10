@@ -4,19 +4,47 @@ from collections.abc import Iterable
 
 import numpy as np
 from sklearn.feature_extraction.text import HashingVectorizer
+from sklearn.pipeline import FeatureUnion
+from sklearn.preprocessing import normalize
 
 from src.schemas import Intent, RetrievalHit
+
+
+def _hybrid_vectorizer() -> FeatureUnion:
+    return FeatureUnion(
+        [
+            (
+                "word",
+                HashingVectorizer(
+                    n_features=3072,
+                    alternate_sign=False,
+                    ngram_range=(1, 2),
+                    norm="l2",
+                ),
+            ),
+            (
+                "character",
+                HashingVectorizer(
+                    analyzer="char_wb",
+                    n_features=1024,
+                    alternate_sign=False,
+                    ngram_range=(3, 5),
+                    norm="l2",
+                ),
+            ),
+        ]
+    )
+
+
+def _embed(vectorizer: FeatureUnion, texts: list[str]):
+    return normalize(vectorizer.transform(texts), norm="l2")
 
 
 class MemoryRetriever:
     def __init__(self, rows: Iterable[dict]):
         self.rows = [r for r in rows if r.get("resolved_proxy", False)]
-        self.vectorizer = HashingVectorizer(
-            n_features=4096, alternate_sign=False, ngram_range=(1, 2), norm="l2"
-        )
-        self.matrix = (
-            self.vectorizer.transform([r["message"] for r in self.rows]) if self.rows else None
-        )
+        self.vectorizer = _hybrid_vectorizer()
+        self.matrix = _embed(self.vectorizer, [r["message"] for r in self.rows]) if self.rows else None
 
     def search(self, message: str, intent: Intent, top_k: int = 3) -> list[RetrievalHit]:
         if not self.rows:
@@ -24,7 +52,7 @@ class MemoryRetriever:
         eligible = [i for i, row in enumerate(self.rows) if row.get("intent") == intent.value]
         if not eligible:
             eligible = list(range(len(self.rows)))
-        query = self.vectorizer.transform([message])
+        query = _embed(self.vectorizer, [message])
         scores = np.asarray((self.matrix[eligible] @ query.T).toarray()).ravel()
         order = np.argsort(-scores)[:top_k]
         return [
@@ -32,7 +60,7 @@ class MemoryRetriever:
                 thread_id=str(self.rows[eligible[i]]["thread_id"]),
                 customer_message=self.rows[eligible[i]]["message"],
                 brand_reply=self.rows[eligible[i]]["reply"],
-                similarity=float(scores[i]),
+                similarity=max(-1.0, min(1.0, float(scores[i]))),
             )
             for i in order
         ]
@@ -46,17 +74,15 @@ class ChromaRetriever:
 
         self.client = chromadb.PersistentClient(path=path)
         self.collection = self.client.get_or_create_collection(
-            "spotify_resolved_cosine_v1", configuration={"hnsw": {"space": "cosine"}}
+            "spotify_resolved_hybrid_cosine_v2", configuration={"hnsw": {"space": "cosine"}}
         )
-        self.vectorizer = HashingVectorizer(
-            n_features=4096, alternate_sign=False, ngram_range=(1, 2), norm="l2"
-        )
+        self.vectorizer = _hybrid_vectorizer()
 
     def index(self, rows: list[dict]) -> int:
         rows = [r for r in rows if r.get("resolved_proxy")]
         if not rows:
             return 0
-        embeddings = self.vectorizer.transform([r["message"] for r in rows]).toarray().tolist()
+        embeddings = _embed(self.vectorizer, [r["message"] for r in rows]).toarray().tolist()
         for start in range(0, len(rows), 500):
             batch = rows[start : start + 500]
             self.collection.upsert(
@@ -70,7 +96,7 @@ class ChromaRetriever:
     def search(self, message: str, intent: Intent, top_k: int = 3) -> list[RetrievalHit]:
         if self.collection.count() == 0:
             return []
-        vector = self.vectorizer.transform([message]).toarray()[0].tolist()
+        vector = _embed(self.vectorizer, [message]).toarray()[0].tolist()
         result = self.collection.query(
             query_embeddings=[vector],
             n_results=top_k,

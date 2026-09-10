@@ -7,10 +7,13 @@ from pathlib import Path
 from scripts.run_pipeline import make_pipeline
 from src.data import read_jsonl, write_jsonl
 from src.evaluation import (
+    bootstrap_proportion_interval,
+    calibration_metrics,
     classification_metrics,
     latency_metrics,
     require_complete_labels,
     routing_metrics,
+    selective_risk_curve,
 )
 
 
@@ -27,6 +30,7 @@ def pipeline_prediction(pipeline, row, retrieval_only=False):
     reply = out.retrieved[0].brand_reply if retrieval_only and out.retrieved else out.draft.text
     return {
         "intent": out.classification.intent.value,
+        "intent_confidence": out.classification.confidence,
         "should_escalate": out.routing.action == "escalate",
         "reply": reply,
         "latency_ms": out.latency_ms,
@@ -83,6 +87,33 @@ def main() -> None:
             "mean_cost_usd": sum(p.get("estimated_cost_usd", 0) for p in predictions)
             / len(predictions),
         }
+        intent_correct = [
+            row["intent"] == prediction["intent"]
+            for row, prediction in zip(rows, predictions, strict=True)
+        ]
+        escalation_cases = [
+            prediction["should_escalate"]
+            for row, prediction in zip(rows, predictions, strict=True)
+            if row["should_escalate"]
+        ]
+        report[name]["intent_accuracy_95_ci"] = bootstrap_proportion_interval(intent_correct)
+        if escalation_cases:
+            report[name]["escalation_recall_95_ci"] = bootstrap_proportion_interval(
+                escalation_cases
+            )
+        if all("intent_confidence" in prediction for prediction in predictions):
+            report[name].update(
+                calibration_metrics(
+                    [row["intent"] for row in rows],
+                    [prediction["intent"] for prediction in predictions],
+                    [prediction["intent_confidence"] for prediction in predictions],
+                )
+            )
+            report[name]["intent_risk_coverage_curve"] = selective_risk_curve(
+                [row["intent"] for row in rows],
+                [prediction["intent"] for prediction in predictions],
+                [prediction["intent_confidence"] for prediction in predictions],
+            )
     Path("eval/results/metrics.json").write_text(json.dumps(report, indent=2))
     print(json.dumps(report, indent=2))
 

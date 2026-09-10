@@ -33,11 +33,80 @@ def routing_metrics(labels: list[bool], predictions: list[bool]) -> dict:
     p, r, f, _ = precision_recall_fscore_support(
         labels, predictions, average="binary", zero_division=0
     )
+    missed = sum(y and not pred for y, pred in zip(labels, predictions, strict=False))
+    auto_handled = sum(not pred for pred in predictions)
     return {
         "escalation_precision": float(p),
         "escalation_recall": float(r),
         "escalation_f1": float(f),
-        "missed_escalations": sum(y and not p for y, p in zip(labels, predictions, strict=False)),
+        "missed_escalations": missed,
+        "auto_handle_coverage": auto_handled / len(predictions) if predictions else 0.0,
+        "unsafe_auto_handle_rate": missed / auto_handled if auto_handled else 0.0,
+    }
+
+
+def calibration_metrics(
+    labels: list[str], predictions: list[str], confidence: list[float], bins: int = 10
+) -> dict:
+    """Top-label Brier score and ECE for the classifier's stated confidence."""
+
+    if not labels or not (len(labels) == len(predictions) == len(confidence)):
+        raise ValueError("Calibration inputs must be non-empty and aligned.")
+    correct = np.asarray([a == b for a, b in zip(labels, predictions, strict=True)], dtype=float)
+    conf = np.asarray(confidence, dtype=float)
+    if np.any((conf < 0) | (conf > 1)):
+        raise ValueError("Confidence values must be between zero and one.")
+    ece = 0.0
+    edges = np.linspace(0, 1, bins + 1)
+    for index in range(bins):
+        mask = (conf >= edges[index]) & (
+            (conf <= edges[index + 1]) if index == bins - 1 else (conf < edges[index + 1])
+        )
+        if mask.any():
+            ece += float(mask.mean() * abs(correct[mask].mean() - conf[mask].mean()))
+    return {
+        "brier_score": float(np.mean((conf - correct) ** 2)),
+        "expected_calibration_error": ece,
+    }
+
+
+def selective_risk_curve(
+    labels: list[str], predictions: list[str], confidence: list[float]
+) -> list[dict]:
+    """Show error among cases retained as automation coverage increases."""
+
+    if not labels or not (len(labels) == len(predictions) == len(confidence)):
+        raise ValueError("Risk-coverage inputs must be non-empty and aligned.")
+    order = np.argsort(-np.asarray(confidence), kind="stable")
+    correct = np.asarray([a == b for a, b in zip(labels, predictions, strict=True)], dtype=float)
+    curve = []
+    for retained in range(1, len(labels) + 1):
+        accuracy = float(correct[order[:retained]].mean())
+        curve.append(
+            {
+                "coverage": retained / len(labels),
+                "accuracy": accuracy,
+                "selective_risk": 1 - accuracy,
+            }
+        )
+    return curve
+
+
+def bootstrap_proportion_interval(
+    outcomes: list[bool], seed: int = 20260910, resamples: int = 2000
+) -> dict:
+    """Seeded non-parametric 95% interval for a binary metric."""
+
+    if not outcomes:
+        raise ValueError("Bootstrap input must be non-empty.")
+    values = np.asarray(outcomes, dtype=float)
+    rng = np.random.default_rng(seed)
+    estimates = values[rng.integers(0, len(values), size=(resamples, len(values)))].mean(axis=1)
+    return {
+        "estimate": float(values.mean()),
+        "lower_95": float(np.percentile(estimates, 2.5)),
+        "upper_95": float(np.percentile(estimates, 97.5)),
+        "resamples": resamples,
     }
 
 

@@ -9,6 +9,7 @@ COPY scripts scripts
 COPY web web
 COPY config.yaml ./
 COPY data/processed data/processed
+RUN mkdir -p data/runtime && chown -R 65532:65532 data/runtime
 EXPOSE 8000
 USER 65532:65532
 CMD ["uv", "run", "--no-sync", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
