@@ -1,17 +1,22 @@
 # Resolve — SpotifyCares support agent
 
-| Submission proof | Status | Reproduce |
+An evidence-first AI support system built from 2.8 million real support tweets. Resolve classifies an incoming message into eight data-informed intents, retrieves cited SpotifyCares precedents, drafts in the brand's historical support style, and independently decides whether a human must take over.
+
+[**Live workbench**](https://resolve-ai-wheat.vercel.app) · [**Evidence dashboard**](https://resolve-ai-wheat.vercel.app/evidence) · [**OpenAPI**](https://resolve-ai-wheat.vercel.app/docs) · [**Six-page report**](REPORT.md)
+
+[![Resolve evaluation evidence dashboard](docs/assets/evidence-dashboard.png)](https://resolve-ai-wheat.vercel.app/evidence)
+
+| Verified proof | Result | Reproduce |
 |---|---:|---|
-| Pipeline contract and safety tests | Run `uv run pytest -q` | Local |
+| Repository software audit | **15/15 checks** | `uv run python -m scripts.audit_submission` |
 | Adversarial launch gate | **16/16 passed** | `uv run python -m eval.run_safety_eval` |
-| Trivial vs simple vs primary metrics on 200 examples | Blocked until the candidate set is genuinely human-labelled | `uv run python -m eval.run_eval` |
-| Judge–human agreement on ≥30 paired ratings | Blocked until human rubric scores exist | `uv run python -m eval.judge_human_agreement` |
+| Source reconstruction | **28,221 Spotify threads** | `data/processed/thread_stats.json` |
+| Leakage control | **0 evaluation components in retrieval** | `data/processed/sampling_stats.json` |
+| Production service | **Live in Vercel bom1** | `GET /healthz` |
 
-Resolve is an auditable, single-brand support pipeline for **SpotifyCares**. It classifies an incoming message into eight data-informed intents, retrieves similar resolved-proxy conversations with word-and-character hybrid vectors, drafts from that precedent, and independently decides whether a human must take over. The API and workbench run without an API key in reproducible local mode; `llm` mode uses structured outputs through a swappable client.
+The API and workbench run without an API key in reproducible local mode. `llm` mode uses schema-validated structured outputs through a swappable client. The final route comes from a deterministic safety gate, so model text cannot approve itself for automatic handling.
 
-**Live production deployment:** [resolve-ai-wheat.vercel.app](https://resolve-ai-wheat.vercel.app)
-
-> Evaluation status is deliberately fail-closed. `eval/golden_set.jsonl` contains 200 component-disjoint annotation candidates after data preparation, but the harness refuses to call them a golden set until a person records every required label. No headline accuracy or judge-agreement number is fabricated in this repository.
+> **Evidence boundary:** `eval/golden_set.jsonl` contains 200 frozen, component-disjoint annotation candidates. They are not represented as a hand-labelled golden set. Headline accuracy, reply-quality, and judge-agreement results stay withheld until the applicant personally completes the required labels and ratings.
 
 ## Fifteen-minute reproduction
 
@@ -25,6 +30,7 @@ uv run python -m scripts.build_taxonomy            # <1 min
 uv run python -m scripts.prepare_data              # <1 min; 5,000 corpus + 200 candidates
 uv run pytest -q                                   # <1 min
 uv run python -m eval.run_safety_eval              # 16-case launch gate
+uv run python -m scripts.audit_submission          # 14-point artifact audit
 uv run uvicorn api.main:app --host 127.0.0.1 --port 8000
 ```
 
@@ -81,6 +87,7 @@ The router is a separate hard gate. Billing, account access, security/privacy, `
 Endpoints:
 
 - `GET /healthz` and `GET /readyz`
+- `GET /evidence` and `GET /v1/evidence` for reviewer-facing and machine-readable proof
 - `POST /v1/analyze` with `{ "message": "...", "mode": "local|llm" }`
 - `GET /docs` for OpenAPI
 
@@ -94,6 +101,7 @@ Vercel deploys through the root `app.py` ASGI entry point and `vercel.json`. Its
 - `src/classifier.py`, `src/retrieval.py`, `src/draft.py`, `src/router.py`: independently testable pipeline stages
 - `src/llm_client.py`: provider boundary, structured schema, timeout and retries
 - `eval/`: frozen candidates, rubric, metrics, judge and agreement scripts
+- `scripts/audit_submission.py`: machine-checks every software and evidence artifact
 - `REPORT.md`: assignment report and current evidence limits
 - `docs/COMPETITIVE_RESEARCH.md`: source-backed comparison and implemented quality gaps
 - `docs/DEPLOYMENT.md`: production topology, verification evidence, operations and rollback

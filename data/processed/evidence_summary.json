@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0",
+  "brand": "SpotifyCares",
+  "verified_at": "2026-09-10",
+  "dataset": {
+    "raw_tweets": 2811774,
+    "spotify_neighborhood_tweets": 91889,
+    "spotify_threads": 28221,
+    "resolved_proxy_threads": 25599,
+    "retrieval_threads": 5000
+  },
+  "leakage_control": {
+    "component_disjoint": true,
+    "seed": 20260910,
+    "candidate_components_in_retrieval": 0
+  },
+  "evaluation": {
+    "safety_gate": {"passed": 16, "total": 16},
+    "candidate_examples": 200,
+    "human_verified_examples": 0,
+    "headline_metrics_status": "pending_human_labels",
+    "judge_agreement_status": "pending_human_ratings"
+  },
+  "system": {
+    "intents": 8,
+    "retrieved_precedents": 3,
+    "high_risk_intents": ["account_access", "billing_or_subscription", "security_or_privacy", "other"],
+    "deployment_region": "bom1"
+  }
+}

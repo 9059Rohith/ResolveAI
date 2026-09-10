@@ -30,6 +30,8 @@ Audited against `Hiver SDE Intern Assignment.docx` and the detailed project brie
 | Decision log | 15 decisions with reasons | Complete |
 | README under-15-minute path | Exact cached commands, timings, corpus size, models and pricing | Complete; timings should be reconfirmed on reviewer network |
 | API and workbench | FastAPI/OpenAPI, same-origin UI, health/readiness, auth option and limits | Complete |
+| Public evidence dashboard | Versioned dataset, leakage, safety and label-status evidence at `/evidence` and `/v1/evidence` | Complete |
+| Automated submission audit | 15 artifact, drift and report-contract checks with an explicit human-evidence gate | Complete |
 | Deployment package | Pinned `uv.lock`, non-root Dockerfile, Compose health check, CI | Complete |
 | Tests/security checks | Unit/integration/API tests plus a 16/16 adversarial and negative-escalation launch gate, lint, compile, browser workflow | Complete |
 | Operational audit trail | Text-free JSONL events with request ID, fingerprint, decision evidence, latency, tokens and cost | Complete |

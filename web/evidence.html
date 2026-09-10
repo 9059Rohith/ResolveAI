@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Auditable evaluation evidence for the Resolve SpotifyCares support agent.">
+  <title>Evaluation evidence | Resolve</title>
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+  <header>
+    <a class="mark" href="/" aria-label="Resolve home">R<span>&bull;</span></a>
+    <div><strong>Resolve</strong><small>Spotify support intelligence</small></div>
+    <nav><a href="/">Workbench</a><a class="active" href="/evidence">Evidence</a><a href="/docs">API</a></nav>
+    <span class="status"><i></i> Production verified</span>
+  </header>
+  <main class="evidence-main">
+    <section class="proof-hero">
+      <p class="overline">Evaluation evidence</p>
+      <h1>Proof before<br>confidence.</h1>
+      <p>Every number below is backed by a checked-in artifact or a reproducible command. Missing human evidence stays visibly missing.</p>
+    </section>
+
+    <section class="number-strip" aria-label="Dataset statistics">
+      <div><strong id="raw-tweets">2.81M</strong><span>raw tweets inspected</span></div>
+      <div><strong id="spotify-threads">28,221</strong><span>Spotify threads rebuilt</span></div>
+      <div><strong id="resolved-threads">25,599</strong><span>resolved-proxy threads</span></div>
+      <div><strong id="retrieval-threads">5,000</strong><span>retrieval precedents</span></div>
+    </section>
+
+    <section class="proof-grid">
+      <article class="proof-card verified">
+        <div class="proof-label"><span>Verified</span><small>machine-reproducible</small></div>
+        <strong class="score" id="safety-score">16/16</strong>
+        <h2>Adversarial launch gate</h2>
+        <p>Prompt injection, billing, account access, privacy, ambiguity, out-of-domain messages, and safe auto-handle controls.</p>
+        <code>uv run python -m eval.run_safety_eval</code>
+      </article>
+      <article class="proof-card pending">
+        <div class="proof-label"><span>Pending</span><small>human-produced evidence</small></div>
+        <strong class="score"><span id="human-labels">0</span>/200</strong>
+        <h2>Hand-labelled golden set</h2>
+        <p>The 200 component-disjoint candidates are frozen and balanced. They remain candidates until the applicant personally adjudicates them.</p>
+        <code>uv run python -m scripts.label_golden</code>
+      </article>
+    </section>
+
+    <section class="evidence-section">
+      <div class="section-title"><p class="overline">01 / data lineage</p><h2>Raw conversation to cited precedent</h2></div>
+      <div class="lineage">
+        <div><b>01</b><strong>Hash</strong><p>Archive SHA-256 fixes source identity.</p></div>
+        <div><b>02</b><strong>Rebuild</strong><p>Both reply edges form full components.</p></div>
+        <div><b>03</b><strong>Redact</strong><p>PII patterns are removed before indexing.</p></div>
+        <div><b>04</b><strong>Split</strong><p>Evaluation components never enter retrieval.</p></div>
+        <div><b>05</b><strong>Cite</strong><p>Every grounded draft returns thread IDs.</p></div>
+      </div>
+    </section>
+
+    <section class="evidence-section two-column">
+      <div class="section-title"><p class="overline">02 / decision policy</p><h2>Escalation is an independent gate</h2><p>The model cannot approve its own reply. Deterministic risk checks make the final routing decision and explain every handoff.</p></div>
+      <div class="policy-list">
+        <div><span>High-risk intent</span><strong>Escalate</strong><small>billing, access, security, privacy, unknown</small></div>
+        <div><span>Prompt injection</span><strong>Escalate</strong><small>retrieval is suppressed</small></div>
+        <div><span>Confidence &lt; 0.67</span><strong>Escalate</strong><small>uncertain classification</small></div>
+        <div><span>Similarity &lt; 0.24</span><strong>Escalate</strong><small>weak historical precedent</small></div>
+        <div><span>Ungrounded draft</span><strong>Escalate</strong><small>no unsupported send</small></div>
+      </div>
+    </section>
+
+    <section class="evidence-section">
+      <div class="section-title"><p class="overline">03 / evaluation contract</p><h2>Three systems, one frozen set</h2></div>
+      <div class="systems-grid">
+        <article><span>Trivial</span><h3>Majority + canned handoff</h3><p>A deliberately weak floor that always escalates.</p></article>
+        <article><span>Simple</span><h3>Keywords + local retrieval</h3><p>A transparent, deterministic baseline with no API cost.</p></article>
+        <article><span>Primary</span><h3>Structured LLM + same safety gate</h3><p>Compared on identical examples, metrics, and routing policy.</p></article>
+      </div>
+      <p class="evidence-note"><strong>Evidence boundary:</strong> headline accuracy, reply-quality, and judge-agreement results are intentionally withheld until 200 human labels, a live primary run, and at least 30 paired ratings exist.</p>
+    </section>
+
+    <section class="cta-panel">
+      <div><p class="overline">Review the implementation</p><h2>From claim to source in one click.</h2></div>
+      <div class="cta-links"><a href="https://github.com/9059Rohith/ResolveAI">Source repository &nearr;</a><a href="https://github.com/9059Rohith/ResolveAI/blob/main/REPORT.md">Six-page report &nearr;</a><a href="/docs">OpenAPI contract &nearr;</a></div>
+    </section>
+  </main>
+  <script src="/assets/evidence.js"></script>
+</body>
+</html>

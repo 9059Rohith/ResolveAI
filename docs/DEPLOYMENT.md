@@ -39,7 +39,7 @@ The release was tested after alias promotion:
 - Mobile viewport: no console errors or horizontal overflow
 - Vercel status: READY; no error-level production logs returned
 
-Repository verification for this release: 29 tests passed and one optional-Chroma test skipped in the lean environment; Ruff passed; the 16-case safety gate passed 16/16.
+Repository verification for this release: 31 tests passed and one optional-Chroma test skipped in the lean environment; Ruff passed; the 16-case safety gate passed 16/16; the submission artifact audit passed 15/15.
 
 ## Deploy and roll back
 

@@ -16,6 +16,23 @@ def test_browser_favicon_probe_does_not_create_a_console_error():
     assert client.get("/favicon.ico").status_code == 204
 
 
+def test_public_evidence_page_and_machine_readable_proof():
+    page = client.get("/evidence")
+    assert page.status_code == 200
+    assert "Evaluation evidence" in page.text
+
+    response = client.get("/v1/evidence")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["dataset"]["raw_tweets"] == 2_811_774
+    assert body["dataset"]["spotify_threads"] == 28_221
+    assert body["evaluation"]["safety_gate"] == {"passed": 16, "total": 16}
+    assert body["evaluation"]["candidate_examples"] == 200
+    assert body["evaluation"]["human_verified_examples"] == 0
+    assert body["evaluation"]["headline_metrics_status"] == "pending_human_labels"
+    assert body["leakage_control"]["component_disjoint"] is True
+
+
 def test_analysis_requires_auth_when_configured():
     assert client.post("/v1/analyze", json={"message": "songs pause"}).status_code == 401
 

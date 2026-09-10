@@ -3,7 +3,7 @@
   "functions": {
     "app.py": {
       "maxDuration": 30,
-      "includeFiles": "{data/processed/retrieval_corpus.jsonl,web/**}",
+      "includeFiles": "{data/processed/retrieval_corpus.jsonl,data/processed/evidence_summary.json,web/**}",
       "excludeFiles": "{tests/**,docs/**,eval/**,dist/**,Hiver SDE Intern Assignment.docx}"
     }
   },

@@ -12,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from scripts.run_pipeline import make_pipeline
+from src.evidence import load_evidence
 from src.settings import SETTINGS
 
 load_dotenv()
@@ -64,6 +65,11 @@ def favicon():
     return Response(status_code=204)
 
 
+@app.get("/v1/evidence")
+def evidence():
+    return load_evidence()
+
+
 @app.post("/v1/analyze", dependencies=[Depends(auth)])
 def analyze(body: AnalyzeRequest):
     if body.mode == "llm":
@@ -77,6 +83,11 @@ def analyze(body: AnalyzeRequest):
 @app.get("/")
 def index():
     return FileResponse("web/index.html")
+
+
+@app.get("/evidence")
+def evidence_page():
+    return FileResponse("web/evidence.html")
 
 
 app.mount("/assets", StaticFiles(directory="web"), name="assets")
