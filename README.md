@@ -1,196 +1,386 @@
-# Resolve â€” SpotifyCares support agent
+# ResolveAI
 
-An evidence-first AI support system built from 2.8 million real support tweets. Resolve classifies an incoming message into eight data-informed intents, retrieves cited SpotifyCares precedents, drafts in the brand's historical support style, and independently decides whether a human must take over.
+**An evidence-first SpotifyCares support agent that earns the right to answer.**
 
-[**Live workbench**](https://resolve-ai-wheat.vercel.app) Â· [**Evidence dashboard**](https://resolve-ai-wheat.vercel.app/evidence) Â· [**OpenAPI**](https://resolve-ai-wheat.vercel.app/docs) Â· [**Six-page report**](REPORT.md)
+ResolveAI classifies an incoming support message, retrieves similar historical SpotifyCares conversations, drafts a response from those precedents, and independently decides whether the case can be handled automatically or must reach a human.
 
-[![Resolve â€” proof before confidence](docs/assets/resolve-poster.png)](https://resolve-ai-wheat.vercel.app)
+[![Python 3.12](https://img.shields.io/badge/Python-3.12-14354C?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.141-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Tests](https://img.shields.io/badge/tests-44%20passed-1F8A5B)](#verification)
+[![Safety gate](https://img.shields.io/badge/safety%20gate-16%2F16-1F8A5B)](#verification)
+[![License](https://img.shields.io/badge/code-MIT-4B5563)](LICENSE.md)
 
-## Live demo
+[**Live workbench**](https://resolve-ai-wheat.vercel.app) · [**Watch the demo**](https://drive.google.com/file/d/1h90RrbgFDE7fGMtFUF3UTyKVjcIWvfxZ/view?usp=sharing) · [**Evidence dashboard**](https://resolve-ai-wheat.vercel.app/evidence) · [**OpenAPI**](https://resolve-ai-wheat.vercel.app/docs) · [**Six-page report**](REPORT.md)
 
-Open the [production workbench](https://resolve-ai-wheat.vercel.app), inspect the [evaluation evidence](https://resolve-ai-wheat.vercel.app/evidence), or review the [OpenAPI contract](https://resolve-ai-wheat.vercel.app/docs). The public deployment uses the reproducible local path so an evaluator can test it without consuming private API credits.
+[![ResolveAI — proof before confidence](docs/assets/resolve-poster.png)](https://resolve-ai-wheat.vercel.app)
 
-## Demo video
+## The reviewer brief
 
-[**Watch the complete 3:44 narrated application demo**](docs/demo/resolve-ai-complete-demo.mp4)
+| Question | Answer |
+|---|---|
+| **What problem does it solve?** | It turns noisy first-contact support text into an intent, a historically grounded draft, and an auditable routing decision. |
+| **Which brand?** | SpotifyCares, selected from the full Twitter support dataset after measuring support-account volume. |
+| **What data does it use?** | 2,811,774 source tweets, 28,221 reconstructed Spotify threads, and a 5,000-thread redacted retrieval corpus. |
+| **What makes it trustworthy?** | Component-disjoint evaluation, cited precedents, structured model outputs, a deterministic fail-closed router, 200 human labels, and measured judge–human agreement. |
+| **What is the main result?** | The primary system reaches **90.5% escalation recall** and reduces missed escalations from **36 to 10** relative to the simple baseline. |
+| **What is the honest limitation?** | The simple baseline has higher intent accuracy, and 10 of the primary system's 60 auto-handled cases disagree with the human routing label. |
 
-The walkthrough covers input validation, a grounded automatic reply, prompt-injection escalation, retrieval suppression, the completed human evaluation, honest baseline results, API operations, and the responsive mobile interface.
+> **Intended use:** supervised reply drafting and conservative triage. The evidence does not support autonomous customer communication.
 
-| Grounded low-risk path | Deterministic safety path |
+## Product walkthrough
+
+The workbench accepts an untrusted customer message and returns five inspectable objects: intent, confidence and rationale; retrieved SpotifyCares precedents; a grounded draft; an auto-handle or escalate decision; and the exact policy reasons behind that decision.
+
+| Grounded low-risk request | Deterministic safety intervention |
 |---|---|
 | ![Playback request classified and auto-handled with three cited precedents](docs/demo/frames/03-auto-result.png) | ![Prompt injection detected and escalated with retrieval suppressed](docs/demo/frames/04-escalation-result.png) |
 
-| Verified proof | Result | Reproduce |
-|---|---:|---|
-| Repository software audit | **19/19 checks** | `uv run python -m scripts.audit_submission` |
-| Adversarial launch gate | **16/16 passed** | `uv run python -m eval.run_safety_eval` |
-| Human golden set | **200/200 labelled** | `eval/golden_set.jsonl` |
-| Primary intent accuracy | **64.5%** (95% CI 57.5Ã¢â‚¬â€œ71.0%) | `eval/results/metrics.json` |
-| Primary escalation recall | **90.5%** (95% CI 84.8Ã¢â‚¬â€œ95.2%) | `eval/results/metrics.json` |
-| Primary LLM execution | **200/200 predictions** | `uv run python -m eval.generate_predictions --system primary_llm` |
-| Judge agreement sample | **32/32 blind human ratings** | `uv run python -m eval.judge_human_agreement` |
-| Source reconstruction | **28,221 Spotify threads** | `data/processed/thread_stats.json` |
-| Leakage control | **0 evaluation components in retrieval** | `data/processed/sampling_stats.json` |
-| Production service | **Live in Vercel bom1** | `GET /healthz` |
+The complete 3:44 walkthrough covers form validation, grounded generation, prompt-injection handling, evidence suppression, evaluation results, API operations, and the responsive mobile experience.
 
-The API and workbench run without an API key in reproducible local mode. `llm` mode uses schema-validated structured outputs through a swappable client. The final route comes from a deterministic safety gate, so model text cannot approve itself for automatic handling.
+- [**Watch on Google Drive**](https://drive.google.com/file/d/1h90RrbgFDE7fGMtFUF3UTyKVjcIWvfxZ/view?usp=sharing)
+- [Repository-hosted MP4](docs/demo/resolve-ai-complete-demo.mp4)
 
-> **Evidence boundary:** results use one manually adjudicated, component-disjoint set of 200 historical Twitter conversations and one human rater. The primary model improves escalation recall over the simple baseline but does not improve intent accuracy. This is evidence for supervised drafting, not production autonomy.
+## System design
 
-## What the system does
+```mermaid
+flowchart LR
+    U[Customer message] --> V[Pydantic validation]
+    V --> C[Intent classifier]
+    C --> R[Intent-filtered retrieval]
+    R --> D[Grounded reply drafter]
+    C --> G[Deterministic safety gate]
+    R --> G
+    D --> G
+    G --> O[Reply + decision + reasons + citations]
 
-| Stage | Input | Output | Trust control |
-|---|---|---|---|
-| Classify | Untrusted customer message | One of eight intents, confidence, rationale, risk factors | Pydantic schema; injection text cannot change instructions |
-| Retrieve | Message plus predicted intent | Three similar historical SpotifyCares threads | Evaluation components are excluded; every hit retains a thread ID |
-| Draft | Message, intent and retrieved replies | Concise support reply plus cited exemplar IDs | Unsupported citations are rejected; agent initials and dead link placeholders are removed |
-| Route | Classification, retrieval and draft | `auto_handle` or `escalate`, with reasons | Deterministic policy runs after generation and cannot be overridden by model text |
-| Audit | Final pipeline result | Text-free JSONL event | Stores fingerprints and decision metadata, never customer or reply text |
+    H[Human golden set] --> E[Evaluation harness]
+    O --> E
+    E --> M[Metrics + confidence intervals]
+    E --> J[LLM judge]
+    J --> A[Judge-human agreement]
+```
 
-The eight-intent taxonomy is `playback_or_audio`, `app_or_device_issue`, `content_availability`, `plan_or_feature_question`, `billing_or_subscription`, `account_access`, `security_or_privacy`, and `other`. Billing, account access, security/privacy, and unknown requests always escalate. Lower-risk requests are automated only when intent confidence is at least 0.67, precedent similarity is at least 0.24, and the draft is grounded.
+| Stage | Responsibility | Trust control |
+|---|---|---|
+| **Validate** | Enforce request schema, body size, and message length | Invalid input receives a structured error before inference. |
+| **Classify** | Select one of eight data-informed intents | Strict Pydantic output schema; injection text remains untrusted data. |
+| **Retrieve** | Find three similar same-intent conversations | Evaluation components are excluded; every result retains a source thread ID. |
+| **Draft** | Produce a concise next step in historical brand style | Citation IDs must refer to returned evidence; stale links and agent signatures are removed. |
+| **Route** | Choose `auto_handle` or `escalate` | A deterministic policy runs after generation and cannot be overridden by model text. |
+| **Audit** | Record decision metadata | Text-free events store fingerprints, reasons, confidence, latency, tokens, and cost. |
 
-## Evidence at a glance
+### Intent taxonomy and routing policy
 
-[![Resolve evaluation evidence dashboard](docs/assets/evidence-dashboard.png)](https://resolve-ai-wheat.vercel.app/evidence)
+The taxonomy was informed by TF-IDF/K-means exploration and then converted into operational labels through open coding.
 
-The source pipeline inspected **2,811,774 tweets**, expanded **91,889 tweets** around SpotifyCares, reconstructed **28,221 clean conversation components**, identified **25,599 resolved proxies**, and sampled a **5,000-thread retrieval corpus**. All 200 evaluation candidates were manually adjudicated and are component-disjoint from retrieval. The sampling began with 25 machine-suggested candidates per intent; final human labels are naturally imbalanced. The synthetic injection case is disclosed in the labeling notes.
+| Intent | Default risk treatment |
+|---|---|
+| `playback_or_audio` | Eligible for auto-handling when confidence, evidence, and grounding gates pass |
+| `app_or_device_issue` | Eligible for auto-handling when gates pass |
+| `content_availability` | Eligible for auto-handling when gates pass |
+| `plan_or_feature_question` | Eligible for auto-handling when gates pass |
+| `billing_or_subscription` | Always escalate |
+| `account_access` | Always escalate |
+| `security_or_privacy` | Always escalate |
+| `other` | Always escalate |
+
+Low-risk cases still escalate when intent confidence is below `0.67`, top precedent similarity is below `0.24`, the draft is ungrounded, prompt injection is detected, or the draft asks for sensitive identifiers. Injection cases bypass retrieval entirely.
+
+## Evaluation report
+
+### Data and leakage control
+
+`scripts/build_threads.py` streams the 2.8M-row source CSV through SQLite and reconstructs conversations using both reply-link columns. It starts from SpotifyCares messages, expands their complete graph neighborhoods, and rejects mixed-brand, cyclic, and customerless components. Text is redacted before derived artifacts are persisted.
+
+| Data stage | Count |
+|---|---:|
+| Source tweets inspected | 2,811,774 |
+| SpotifyCares neighborhood tweets | 91,889 |
+| Clean Spotify conversation components | 28,221 |
+| Resolved-proxy threads | 25,599 |
+| Retrieval corpus | 5,000 |
+| Evaluation components found in retrieval | **0** |
+
+The golden set contains 199 sampled historical conversations and one disclosed synthetic prompt-injection case. One human adjudicated all 200 intents, ideal reply directions, escalation labels, and routing reasons. Predictions were frozen before human labels were read. See [labeling notes](eval/labeling_notes.md) and [sampling statistics](data/processed/sampling_stats.json).
+
+### Results against two baselines
+
+All three systems are measured on the same 200 human-labelled examples. Confidence intervals use 2,000 seeded bootstrap resamples.
+
+| System | Intent accuracy (95% CI) | Macro-F1 | Escalation recall (95% CI) | Missed escalations | Unsafe auto-handle | Coverage | p50 / p95 | Mean cost |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Trivial: always `other`, always escalate | 7.5% (4.0–11.5) | 1.7% | **100%** (100–100) | **0** | **0%** | 0% | <1 / <1 ms | $0 |
+| Simple: keyword + local retrieval | **67.0%** (60.5–73.0) | **67.5%** | 65.7% (56.2–74.3) | 36 | 35.0% | **51.5%** | 45 / 272 ms | $0 |
+| Primary: `gpt-4.1-mini` + safety gate | 64.5% (57.5–71.0) | 61.6% | **90.5%** (84.8–95.2) | **10** | **16.7%** | 30.0% | 4,639 / 6,780 ms | $0.000447 |
+
+The simple system is the strongest intent classifier on this set. The primary system's gain is routing safety: escalation recall rises by 24.8 points, escalation F1 rises from 68.3% to 77.6%, and missed escalations fall from 36 to 10. That gain reduces coverage and increases latency. The intervals for intent accuracy overlap, so the 2.5-point ranking should not be treated as stable.
+
+The frozen primary run used 129,117 input tokens and 23,640 output tokens, with an estimated total generation cost of `$0.089465`. Primary confidence remains poorly calibrated (`Brier 0.286`, `ECE 0.272`), which is why model confidence never controls routing by itself.
+
+### Reply quality and judge validation
+
+An independently prompted `gpt-4.1` judge scored all 200 drafts against human reply directions. A human then blindly rated 32 intent-balanced replies without seeing the judge scores.
+
+| Dimension | Judge mean (200) | Human mean (32) | Judge mean on pairs | Weighted kappa | Pearson r |
+|---|---:|---:|---:|---:|---:|
+| Groundedness | 3.61 | 4.53 | 3.81 | 0.382 | 0.570 |
+| Tone | 3.63 | 4.97 | 3.84 | -0.006 | -0.042 |
+| Safety | 4.39 | 5.00 | 4.47 | 0.000 | undefined¹ |
+| Actionability | 3.43 | 3.97 | 3.47 | 0.568 | 0.679 |
+| Conciseness | 4.56 | 4.91 | 4.59 | 0.115 | 0.171 |
+| Evidence relevance | 3.53 | 4.16 | 3.69 | **0.598** | **0.667** |
+
+¹ Human safety ratings were all `5`, leaving zero variance and making correlation undefined.
+
+Agreement is useful for evidence relevance and actionability, moderate for groundedness, and weak for tone and conciseness. Judge scores are therefore diagnostic evidence rather than human-label replacements. The separate deterministic safety suite passes all 16 versioned injection, high-risk, ambiguity, and negative-control cases.
+
+### Five measured failure modes
+
+| Failure mode | Measured example | Hypothesis and next fix |
+|---|---|---|
+| Plan questions become account access | 13 of 36 plan/feature cases; `spotify-007` | Terms such as “account” and “verify” dominate. Add supervised boundary examples for general process questions. |
+| Billing becomes account access | 6 of 31 billing cases; `spotify-037` | Account language masks partner entitlement. Give billing and partner signals precedence for queue selection. |
+| Technical login failures over-escalate | `spotify-025` | Separate credential recovery from a broken login flow by modeling the requested resolution. |
+| Content cases hide account-specific risk | `spotify-011` | Add regional, user-specific availability, artist metadata, and historical handoff features to routing. |
+| Exhausted troubleshooting is underweighted | `spotify-041` | Treat repeated failure, prior steps, multi-day impact, and cancellation language as independent risk signals. |
+
+### What is misleading about the headline number?
+
+The 64.5% intent accuracy is not a general support-agent score. The sample comes from one historical public channel, intentionally contains difficult cases, and has one annotator. The simple baseline is 2.5 points better, with substantially overlapping confidence intervals.
+
+The 90.5% escalation recall must be read beside 67.9% precision and 30% automation coverage. An always-escalate baseline reaches 100% recall by automating nothing. The 16.7% unsafe-auto-handle rate represents 10 disagreements among 60 auto-handled cases, and those errors do not have equal severity. Historical silence after a brand reply is only a resolution proxy; it may also mean abandonment or a move to a private channel.
+
+Judge averages can look strong while agreement is weak. The human used a narrow high-score range, so safety correlation is unidentifiable and tone agreement is near zero. Offline evaluation also excludes live account state, policy drift, outages, reviewer edits, and real customer outcomes. The evidence supports a conservative human-in-the-loop pilot.
+
+The complete analysis, including the six-page framing and one-week plan, is in [REPORT.md](REPORT.md).
 
 ## Fifteen-minute reproduction
 
-Prerequisites: Python 3.12, [uv](https://docs.astral.sh/uv/), about 1 GB free disk, and ordinary broadband. Commands are from the repository root.
+Prerequisites: Python 3.12, [uv](https://docs.astral.sh/uv/), Git, and approximately 1 GB of free disk space.
+
+### Fast evaluation path
+
+Frozen predictions and human labels are checked in, so the headline results require no paid model calls and no dataset download.
 
 ```powershell
-uv sync                                           # ~1-3 min first run
-uv run python scripts/download_data.py            # ~2-6 min; parallel 177 MB download
-uv run python -m scripts.build_threads             # ~2-4 min; streams 3M rows through SQLite
-uv run python -m scripts.build_taxonomy            # <1 min
-uv run python -m scripts.prepare_data              # <1 min; 5,000 corpus + 200 candidates
-uv run pytest -q                                   # <1 min
-uv run python -m eval.run_safety_eval              # 16-case launch gate
-uv run python -m scripts.audit_submission          # 19-point artifact audit
+git clone https://github.com/9059Rohith/ResolveAI.git
+cd ResolveAI
+uv sync
+uv run python -m eval.run_eval --reuse-predictions
+uv run python -m eval.judge_human_agreement
+uv run python -m eval.run_safety_eval
+uv run python -m scripts.audit_submission
+uv run pytest -q
+```
+
+Expected release checks:
+
+```text
+Software checks: 19/19
+Safety gate: 16/16
+Human labels: 200/200
+Software ready: yes
+44 passed, 1 skipped
+```
+
+### Rebuild from the source dataset
+
+The full pipeline is streaming, deterministic, and cached after download.
+
+```powershell
+uv run python scripts/download_data.py
+uv run python -m scripts.build_threads
+uv run python -m scripts.build_taxonomy
+uv run python -m scripts.prepare_data
+```
+
+The source archive hash is recorded in [`data/processed/source.json`](data/processed/source.json). Raw data, SQLite staging files, vector indexes, and runtime logs are excluded from Git.
+
+## Run the application
+
+Local mode is complete and requires no API key.
+
+```powershell
 uv run uvicorn api.main:app --host 127.0.0.1 --port 8000
 ```
 
-Open `http://127.0.0.1:8000`. The default corpus is a seeded, component-disjoint subsample of up to **5,000 SpotifyCares resolved-proxy threads**, not the full 3M-row dataset. Download and extraction are cached. The source archive hash is recorded in `data/processed/source.json`.
-
-Try the CLI:
+Open <http://127.0.0.1:8000>, or use the CLI:
 
 ```powershell
 uv run python -m scripts.run_pipeline "My songs stop after ten seconds"
 uv run python -m scripts.run_pipeline --mode llm "I was charged twice"
 ```
 
-Local mode costs $0 and is the simple baseline: keyword intent, local hashing-vector retrieval, and precedent-shaped drafting. LLM mode uses `gpt-4.1-mini` for classification and drafting. At prices checked 2026-09-10 ($0.40/M input, $1.60/M output), each response records actual tokens and estimated cost. `gpt-4.1` is the independently prompted judge. Put `OPENAI_API_KEY` in a local `.env`; keys are never committed.
-
 ### Optional OpenAI mode
-
-Keep credentials in `.env`, never in `.env.example`:
 
 ```powershell
 Copy-Item .env.example .env
-# Edit .env and replace the placeholder with your key.
+# Add your key to .env, which is ignored by Git.
 uv run python -m scripts.run_pipeline --mode llm "My songs keep pausing"
 ```
 
-The client loads `.env` automatically, calls the Responses API with a strict JSON schema, validates the output, retries bounded transient failures, records token usage, and removes copied historical agent signatures. The live public deployment intentionally uses local mode by default, so trying the application does not consume API credits.
+| Variable | Required | Purpose |
+|---|---:|---|
+| `OPENAI_API_KEY` | No | Enables `gpt-4.1-mini` classification and drafting. |
+| `APP_API_TOKEN` | No | Requires a bearer token on `POST /v1/analyze`. |
+| `AUDIT_LOG_PATH` | No | Overrides the privacy-minimizing audit-event destination. |
 
-The checked-in 200-case primary prediction run used 129,117 input tokens and 23,640 output tokens for an estimated total of **$0.089465**. It completed before labels were read, preserving evaluation independence. Regenerate it with `uv run python -m eval.generate_predictions --system primary_llm --workers 6`; the runner is parallel, resumable, and writes progress every ten cases.
+The provider client uses the OpenAI Responses API with a strict JSON schema, bounded retries, a 30-second timeout, token accounting, and response validation. The public deployment uses local mode, so reviewers can test it without consuming private API credits.
 
-The under-15-minute path uses the same hashing vectors in memory to avoid Chroma's large installation tree. To build the optional persistent Chroma index, run `uv sync --extra vector` and then `uv run python -m scripts.build_vector_store`. The application automatically uses it when present and otherwise uses the component-disjoint JSONL corpus.
+### API contract
 
-## Complete evaluation workflow
+```http
+POST /v1/analyze
+Content-Type: application/json
 
-The completed evidence can be reproduced with:
+{
+  "message": "My songs stop after ten seconds",
+  "mode": "local"
+}
+```
+
+The response contains `classification`, `retrieved`, `draft`, `routing`, `latency_ms`, token counts, cost, and a request ID. Interactive schemas are available at the [OpenAPI documentation](https://resolve-ai-wheat.vercel.app/docs).
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /healthz` | Process liveness |
+| `GET /readyz` | Corpus and mode readiness |
+| `POST /v1/analyze` | Complete classify–retrieve–draft–route pipeline |
+| `GET /evidence` | Reviewer-facing evaluation dashboard |
+| `GET /v1/evidence` | Machine-readable verified evidence |
+
+## Technology
+
+| Layer | Implementation |
+|---|---|
+| API | Python 3.12, FastAPI, Pydantic |
+| Data | Streaming CSV processing, SQLite graph staging, redacted JSONL |
+| Retrieval | Stable 4,096-dimensional word/character hashing vectors; optional Chroma adapter |
+| Generation | OpenAI Responses API with schema-validated outputs; zero-key local fallback |
+| Frontend | Semantic HTML, responsive CSS, framework-free JavaScript |
+| Evaluation | scikit-learn, NumPy, bootstrap intervals, calibration, paired agreement analysis |
+| Quality | pytest, Ruff, adversarial safety suite, artifact audit |
+| Delivery | Docker Compose, non-root container, Vercel Functions |
+
+## Repository map
+
+```text
+ResolveAI/
+├── api/                    FastAPI routes and middleware
+├── src/                    Classification, retrieval, drafting, routing, audit
+├── web/                    Responsive workbench and evidence dashboard
+├── scripts/                Data preparation, annotation, CLI, submission audit
+├── eval/                   Golden set, frozen predictions, judge, metrics, rubric
+│   └── results/            Reproducible result artifacts
+├── data/processed/         Redacted corpus and provenance summaries
+├── docs/                   Deployment guide, research, screenshots, demo video
+├── tests/                  Unit, integration, API, safety, deployment tests
+├── REPORT.md               Six-page assignment report
+├── DECISIONS.md            15 non-obvious engineering decisions
+├── CITATIONS.md            Sources, licenses, pricing, assistance disclosure
+├── Dockerfile              Non-root production image
+├── docker-compose.yml      Local container deployment
+└── vercel.json             Production serverless configuration
+```
+
+## Security and operational controls
+
+- Customer text is always treated as untrusted input.
+- Prompt-injection signals force escalation and suppress retrieval.
+- Billing, account, security, privacy, and unknown intents always escalate.
+- Generated citation IDs are checked against retrieved precedents.
+- Drafts requesting sensitive identifiers cannot be auto-handled.
+- The analysis endpoint applies request-size and per-client rate limits.
+- Optional bearer authentication protects public analysis deployments.
+- Audit events store no customer message or reply text.
+- `.env`, raw data, databases, model indexes, and runtime logs are ignored.
+- The Docker image runs as an unprivileged user and exposes a health check.
+
+The interface uses explicit labels, semantic headings, keyboard-visible focus, ARIA live/alert regions, and readable contrast. Chromium checks at 390, 768, and 1440 pixels found no horizontal overflow or application console errors.
+
+## Verification
+
+The release was checked from code, container configuration, browser, API, and production deployment.
+
+| Check | Result |
+|---|---:|
+| Ruff lint | Passed |
+| pytest | **44 passed, 1 optional Chroma test skipped** |
+| Adversarial launch gate | **16/16 passed** |
+| Submission artifact audit | **19/19 passed** |
+| Human golden labels | **200/200** |
+| LLM judge scores against human references | **200/200** |
+| Blind human reply ratings | **32/32** |
+| Docker Compose validation | Passed |
+| Production Vercel build | Ready |
+| Live desktop/tablet/mobile browser checks | Passed |
+| Tracked credential scan | No secrets detected |
+
+Run the same release gates:
 
 ```powershell
-uv run python -m scripts.label_golden             # resume-safe terminal annotation
-uv run python -m eval.run_eval --reuse-predictions # same 200 labels; reuses frozen outputs
-uv run python -m eval.run_judge --system primary_llm --workers 6
-uv run python -m scripts.rate_judge                # 32 blind, intent-balanced ratings
-uv run python -m eval.judge_human_agreement
+uv run ruff check .
+uv run pytest -q
+uv run python -m eval.run_safety_eval
+uv run python -m scripts.audit_submission
+docker compose config --quiet
 ```
 
-`run_eval.py` writes predictions beside labels, never over them. It reports intent accuracy/macro-F1/confusion matrix; escalation precision/recall/F1 and missed escalations; auto-handle coverage and unsafe auto-handle rate; classifier Brier score/ECE and a risk-coverage curve; seeded bootstrap 95% intervals; p50/p95 latency; and measured mean request cost. `run_judge.py` scores groundedness, tone, safety, actionability, conciseness, and evidence relevance. Its checked-in 200 scores use the human reply directions as references. `rate_judge.py` collected 32 blind, intent-balanced human ratings without displaying model scores. Agreement reports quadratic weighted kappa, Pearson correlation, and score means per dimension; undefined correlation from a constant human score is represented as `null`.
+## Deployment
 
-`eval/safety_cases.jsonl` is a separate pre-deployment gate covering prompt injection, financial/account/privacy risk, ambiguity, out-of-domain requests, and negative cases that should be auto-handled. It currently passes 16/16 in local mode. This verifies deterministic contracts, not open-ended LLM reply quality.
+The production service is deployed on Vercel through the root `app.py` ASGI entry point. `vercel.json` pins the Python function, includes the redacted corpus and web assets, and excludes evaluation-only deployment weight.
 
-## Architecture
+- Application: <https://resolve-ai-wheat.vercel.app>
+- Evidence: <https://resolve-ai-wheat.vercel.app/evidence>
+- API: <https://resolve-ai-wheat.vercel.app/docs>
+- Health: <https://resolve-ai-wheat.vercel.app/healthz>
 
-```mermaid
-flowchart LR
-  A[Untrusted customer text] --> B[Pydantic input]
-  B --> C[Intent classifier]
-  C --> D[Intent-filtered Chroma retrieval]
-  D --> E[Grounded drafter]
-  C --> F[Deterministic risk router]
-  D --> F
-  E --> G[Auditable result]
-  F --> G
-  H[Human golden labels] --> I[Same-set evaluator]
-  G --> I
-  I --> J[Metrics + saved predictions]
+Container deployment is also supported:
+
+```powershell
+docker compose up --build
 ```
 
-The router is a separate hard gate. Billing, account access, security/privacy, `other`, confidence below 0.67, similarity below 0.24, an ungrounded draft, detected injection, or a draft asking for sensitive identifiers produces `escalate` with explicit risk factors. Injection cases bypass retrieval so irrelevant historical text is not exposed as evidence. Model text cannot override the gate.
-
-## Tech stack
-
-| Layer | Technology |
-|---|---|
-| Application | Python 3.12, FastAPI, Pydantic |
-| Data pipeline | Streaming CSV, SQLite graph staging, redacted JSONL artifacts |
-| Retrieval | Stable local hashing vectors with an optional Chroma adapter |
-| AI provider | OpenAI Responses API with strict structured outputs; local zero-key fallback |
-| Frontend | Semantic HTML, responsive CSS, framework-free JavaScript |
-| Evaluation | scikit-learn, NumPy, seeded bootstrap intervals, paired human/judge analysis |
-| Quality | pytest, Ruff, adversarial safety suite, submission audit |
-| Delivery | Docker Compose, non-root container, GitHub Actions, Vercel Functions |
-
-## Security, accessibility, and responsive design
-
-Customer text is treated as untrusted data. Prompt-injection signals bypass retrieval, high-risk intents always escalate, model citations are checked against returned precedents, and drafts asking for sensitive identifiers cannot be auto-handled. The API supports bearer authentication, applies body and request-rate limits only to the analysis endpoint, and returns structured 413/429 errors. `.env` and runtime logs are ignored; the audit trail stores fingerprints and decision metadata without customer or reply text.
-
-The interface uses semantic headings, explicit form labels, an ARIA live results region, an alert region for errors, visible keyboard focus, sufficient color contrast, and controls that remain reachable on small screens. Desktop, tablet, and 390-pixel mobile layouts were browser-tested without application console errors.
+Vercel's read-only filesystem sends audit events to writable `/tmp`. A durable production environment should set `AUDIT_LOG_PATH` to persistent storage or forward events to a managed log drain. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for deployment verification, operations, and rollback.
 
 ## Assignment coverage
 
-| Requirement | Evidence | Status |
+| Requirement | Implementation and evidence | Status |
 |---|---|---:|
-| Intent classification | Eight data-derived intents; accuracy, macro-F1, calibration, and confusion matrix | Complete |
-| Historically grounded reply | Three cited SpotifyCares precedents with component-disjoint retrieval | Complete |
-| Auto-handle or escalate | Independent deterministic router with reasons and risk factors | Complete |
-| Golden evaluation set | 200 manually adjudicated examples plus sampling and labeling notes | Complete |
-| Automated metrics and judge | Two baselines, confidence intervals, 200 judge scores, 32 blind human pairs | Complete |
-| Six-page report | Results, five measured failures, misleading-number analysis, one-week plan | Complete |
+| Classify incoming messages | Eight data-informed intents, accuracy, macro-F1, calibration, confusion matrix | Complete |
+| Draft historically grounded replies | Three cited, component-disjoint SpotifyCares precedents | Complete |
+| Auto-handle or escalate | Independent deterministic router with explicit reasons | Complete |
+| Golden evaluation set | 200 human-adjudicated examples with sampling and labeling notes | Complete |
+| Automated metrics | Same-set classification, routing, coverage, safety, cost, latency, calibration, CIs | Complete |
+| Two baselines | Always-escalate trivial system and local keyword/retrieval system | Complete |
+| LLM-as-judge | Six-dimension rubric, 200 scores, 32 blind human pairs, kappa and correlation | Complete |
+| Failure analysis | Five measured errors with hypotheses | Complete |
+| Misleading headline section | Sampling, annotation, proxy, coverage, calibration, and judge limits | Complete |
+| Report | Six-page report with one-week plan | Complete |
 | Decision log | 15 non-obvious choices with rationale | Complete |
-| Reproduction | Cached under-15-minute path and one-command audit | Complete |
+| Reproduction | Frozen no-cost path completes inside the 15-minute requirement | Complete |
 
-See [ASSIGNMENT_CHECKLIST.md](ASSIGNMENT_CHECKLIST.md) for the artifact-level audit map.
+The artifact-level cross-check is in [ASSIGNMENT_CHECKLIST.md](ASSIGNMENT_CHECKLIST.md).
 
-## Service and deployment
+## If I had one more week
 
-Endpoints:
+1. Add an independent second annotator for all 200 cases and adjudicate disagreements.
+2. Add persistence, prior-troubleshooting, regional, artist-support, and partner-billing risk features.
+3. Train a compact supervised classifier and compare it on the frozen split.
+4. Manually verify outcomes for frequently retrieved threads and evaluate a cross-encoder reranker.
+5. Run a shadow support queue and measure reviewer acceptance, edits, overrides, latency, and policy violations.
 
-- `GET /healthz` and `GET /readyz`
-- `GET /evidence` and `GET /v1/evidence` for reviewer-facing and machine-readable proof
-- `POST /v1/analyze` with `{ "message": "...", "mode": "local|llm" }`
-- `GET /docs` for OpenAPI
+## Documentation
 
-Set `APP_API_TOKEN` to require `Authorization: Bearer â€¦` on analysis. The service caps message length, body size, requests per minute, LLM retries, and upstream timeouts. Every API/CLI decision appends privacy-minimizing metadata to `data/runtime/audit.jsonl`: request ID, message fingerprint, route, reasons, precedent IDs, confidence, latency, token use, and cost; it stores no message or reply text. Build a deployment artifact with `docker compose up --build`; the lean container uses the checked-in redacted corpus in memory, runs as an unprivileged user, and exposes a health check. The optional Chroma index is intended for hosts that install the `vector` extra and mount `data/chroma` themselves.
+- [Assignment report](REPORT.md)
+- [Decision log](DECISIONS.md)
+- [Evaluation rubric](eval/judge_rubric.md)
+- [Labeling and sampling notes](eval/labeling_notes.md)
+- [Competitive research](docs/COMPETITIVE_RESEARCH.md)
+- [Deployment and rollback](docs/DEPLOYMENT.md)
+- [Citations, licenses, pricing, and assistance disclosure](CITATIONS.md)
+- [Submission artifact map](ASSIGNMENT_CHECKLIST.md)
 
-Vercel deploys through the root `app.py` ASGI entry point and `vercel.json`. Its read-only function filesystem redirects audit events to writable `/tmp`; production-grade durable audit retention should set `AUDIT_LOG_PATH` on a persistent container host or replace the sink with a managed log drain. NumPy and scikit-learn are evaluation-only dependencies, so the hosted API bundle stays lean while `uv sync` still installs the complete evaluator for reviewers.
+## License and attribution
 
-## Repository guide
-
-- `src/data.py`: graph reconstruction, redaction, JSONL IO
-- `src/classifier.py`, `src/retrieval.py`, `src/draft.py`, `src/router.py`: independently testable pipeline stages
-- `src/llm_client.py`: provider boundary, structured schema, timeout and retries
-- `eval/`: frozen candidates, rubric, metrics, judge and agreement scripts
-- `scripts/audit_submission.py`: machine-checks every software and evidence artifact
-- `REPORT.md`: assignment report and current evidence limits
-- `docs/COMPETITIVE_RESEARCH.md`: source-backed comparison and implemented quality gaps
-- `docs/DEPLOYMENT.md`: production topology, verification evidence, operations and rollback
-- `DECISIONS.md`: 15 non-obvious choices
-- `CITATIONS.md`: sources, licensing, pricing and AI-assistance disclosure
-
-The raw dataset, SQLite staging database, vector index, environment files, keys, and generated runtime artifacts are ignored by Git. Regex PII redaction is useful risk reduction, not a compliance system. Review `REPORT.md` before presenting the project live.
+Original source code and documentation are available under the MIT license. Derived data remains subject to the source dataset's CC BY-NC-SA 4.0 terms. Dataset provenance, technical references, pricing assumptions, and development-tool assistance are documented in [CITATIONS.md](CITATIONS.md).
